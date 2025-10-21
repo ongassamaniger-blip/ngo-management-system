@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - NGO System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .sidebar {
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            transition: all 0.3s ease;
+        }
+        .menu-item {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .menu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        .menu-item.active {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-left: 4px solid #fff;
+        }
+        .stat-card {
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease;
+        }
+        .page-content {
+            display: none;
+        }
+        .page-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <div class="sidebar w-64 fixed h-full z-50">
+            <div class="p-6">
+                <div class="flex items-center mb-8">
+                    <div class="w-10 h-10 bg-gradient-to-br from-purple-600 to-blue-600 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-heart text-white text-xl"></i>
+                    </div>
+                    <div class="ml-3">
+                        <h1 class="text-white font-bold text-xl">NGO System</h1>
+                        <p class="text-gray-400 text-xs">Management</p>
+                    </div>
+                </div>
+
+                <nav class="space-y-2">
+                    <div class="menu-item active px-4 py-3 rounded-lg text-white" data-page="dashboard">
+                        <i class="fas fa-home w-6"></i>
+                        <span class="ml-3">Dashboard</span>
+                    </div>
+                    <div class="menu-item px-4 py-3 rounded-lg text-white" data-page="finans">
+                        <i class="fas fa-wallet w-6"></i>
+                        <span class="ml-3">Finans</span>
+                    </div>
+                    <div class="menu-item px-4 py-3 rounded-lg text-white" data-page="tesisler">
+                        <i class="fas fa-building w-6"></i>
+                        <span class="ml-3">Tesisler</span>
+                    </div>
+                    <div class="menu-item px-4 py-3 rounded-lg text-white" data-page="projeler">
+                        <i class="fas fa-project-diagram w-6"></i>
+                        <span class="ml-3">Projeler</span>
+                    </div>
+                    <div class="menu-item px-4 py-3 rounded-lg text-white" data-page="kurban">
+                        <i class="fas fa-mosque w-6"></i>
+                        <span class="ml-3">Kurban</span>
+                    </div>
+                    <div class="menu-item px-4 py-3 rounded-lg text-white" data-page="personel">
+                        <i class="fas fa-users w-6"></i>
+                        <span class="ml-3">Personel</span>
+                    </div>
+                </nav>
+
+                <div class="absolute bottom-6 left-6 right-6">
+                    <button id="logoutBtn" class="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Çıkış
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 ml-64">
+            <!-- Header -->
+            <header class="bg-white shadow-sm sticky top-0 z-40">
+                <div class="flex items-center justify-between px-8 py-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800" id="pageTitle">Dashboard</h2>
+                        <p class="text-sm text-gray-500" id="pageSubtitle">Genel Bakış</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="w-10 h-10 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center text-white font-bold">
+                            <span id="userInitials">--</span>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-gray-800" id="userName">Yükleniyor...</p>
+                            <p class="text-xs text-gray-500" id="userRole">--</p>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Page -->
+            <div id="dashboard-page" class="page-content active p-8">
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="stat-card bg-gradient-to-br from-green-500 to-green-700 rounded-2xl p-6 text-white fade-in">
+                        <i class="fas fa-arrow-down text-4xl opacity-80 mb-4"></i>
+                        <p class="text-white text-opacity-80 text-sm mb-1">Toplam Gelir</p>
+                        <h3 class="text-3xl font-bold" id="totalIncome">₺0</h3>
+                        <p class="text-sm mt-2 opacity-80">Bu Ay</p>
+                    </div>
+
+                    <div class="stat-card bg-gradient-to-br from-red-500 to-red-700 rounded-2xl p-6 text-white fade-in">
+                        <i class="fas fa-arrow-up text-4xl opacity-80 mb-4"></i>
+                        <p class="text-white text-opacity-80 text-sm mb-1">Toplam Gider</p>
+                        <h3 class="text-3xl font-bold" id="totalExpense">₺0</h3>
+                        <p class="text-sm mt-2 opacity-80">Bu Ay</p>
+                    </div>
+
+                    <div class="stat-card bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl p-6 text-white fade-in">
+                        <i class="fas fa-wallet text-4xl opacity-80 mb-4"></i>
+                        <p class="text-white text-opacity-80 text-sm mb-1">Bakiye</p>
+                        <h3 class="text-3xl font-bold" id="balance">₺0</h3>
+                        <p class="text-sm mt-2 opacity-80">Net</p>
+                    </div>
+
+                    <div class="stat-card bg-gradient-to-br from-purple-500 to-purple-700 rounded-2xl p-6 text-white fade-in">
+                        <i class="fas fa-building text-4xl opacity-80 mb-4"></i>
+                        <p class="text-white text-opacity-80 text-sm mb-1">Tesisler</p>
+                        <h3 class="text-3xl font-bold" id="totalFacilities">0</h3>
+                        <p class="text-sm mt-2 opacity-80">Aktif</p>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="grid grid-cols-4 gap-4 mb-8">
+                    <button onclick="openModal('incomeModal')" class="bg-white hover:bg-green-50 rounded-xl p-6 shadow-md hover:shadow-xl transition text-center">
+                        <i class="fas fa-plus-circle text-green-600 text-3xl mb-2"></i>
+                        <p class="font-semibold text-gray-800">Yeni Gelir</p>
+                    </button>
+                    <button onclick="openModal('expenseModal')" class="bg-white hover:bg-red-50 rounded-xl p-6 shadow-md hover:shadow-xl transition text-center">
+                        <i class="fas fa-minus-circle text-red-600 text-3xl mb-2"></i>
+                        <p class="font-semibold text-gray-800">Yeni Gider</p>
+                    </button>
+                    <button onclick="openModal('projectModal')" class="bg-white hover:bg-blue-50 rounded-xl p-6 shadow-md hover:shadow-xl transition text-center">
+                        <i class="fas fa-project-diagram text-blue-600 text-3xl mb-2"></i>
+                        <p class="font-semibold text-gray-800">Yeni Proje</p>
+                    </button>
+                    <button onclick="openModal('sacrificeModal')" class="bg-white hover:bg-orange-50 rounded-xl p-6 shadow-md hover:shadow-xl transition text-center">
+                        <i class="fas fa-mosque text-orange-600 text-3xl mb-2"></i>
+                        <p class="font-semibold text-gray-800">Kurban Kayıt</p>
+                    </button>
+                </div>
+
+                <!-- Recent Transactions -->
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Son İşlemler</h3>
+                    <div id="recentTransactions" class="space-y-3">
+                        <p class="text-gray-500 text-center py-4">Yükleniyor...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Finans Page -->
+<div id="finans-page" class="page-content p-8">
+    <!-- Filtreler -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+        <h3 class="text-lg font-bold text-gray-800 mb-4">
+            <i class="fas fa-filter mr-2"></i>Filtreler
+        </h3>
+        <div class="grid grid-cols-4 gap-4">
+            <select id="filterType" class="px-4 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none">
+                <option value="">Tüm İşlemler</option>
+                <option value="income">Gelir</option>
+                <option value="expense">Gider</option>
+            </select>
+            
+            <select id="filterStatus" class="px-4 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none">
+                <option value="">Tüm Durumlar</option>
+                <option value="pending">Bekliyor</option>
+                <option value="approved">Onaylandı</option>
+                <option value="paid">Ödendi</option>
+            </select>
+            
+            <input type="date" id="filterStartDate" class="px-4 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none" placeholder="Başlangıç">
+            
+            <input type="date" id="filterEndDate" class="px-4 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none" placeholder="Bitiş">
+        </div>
+        
+        <div class="flex space-x-3 mt-4">
+            <button onclick="applyFilters()" class="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
+                <i class="fas fa-search mr-2"></i>Filtrele
+            </button>
+            <button onclick="clearFilters()" class="px-6 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition">
+                <i class="fas fa-times mr-2"></i>Temizle
+            </button>
+            <button onclick="exportReport()" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition ml-auto">
+                <i class="fas fa-file-excel mr-2"></i>Excel İndir
+            </button>
+        </div>
+    </div>
+
+    <!-- İstatistik Kartları -->
+    <div class="grid grid-cols-3 gap-6 mb-6">
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm mb-1">Toplam Gelir</p>
+                    <h3 class="text-2xl font-bold text-green-600" id="financeIncome">₺0</h3>
+                    <p class="text-xs text-gray-400 mt-1"><span id="incomeCount">0</span> işlem</p>
+                </div>
+                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-arrow-down text-green-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm mb-1">Toplam Gider</p>
+                    <h3 class="text-2xl font-bold text-red-600" id="financeExpense">₺0</h3>
+                    <p class="text-xs text-gray-400 mt-1"><span id="expenseCount">0</span> işlem</p>
+                </div>
+                <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-arrow-up text-red-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm mb-1">Net Bakiye</p>
+                    <h3 class="text-2xl font-bold text-blue-600" id="financeBalance">₺0</h3>
+                    <p class="text-xs text-gray-400 mt-1">Güncel durum</p>
+                </div>
+                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-wallet text-blue-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- İşlem Tablosu -->
+    <div class="bg-white rounded-2xl shadow-lg p-6">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-xl font-bold text-gray-800">Tüm İşlemler</h3>
+            <div class="flex space-x-2">
+                <button onclick="openModal('incomeModal')" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                    <i class="fas fa-plus mr-2"></i>Gelir
+                </button>
+                <button onclick="openModal('expenseModal')" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+                    <i class="fas fa-minus mr-2"></i>Gider
+                </button>
+            </div>
+        </div>
+        <div id="allTransactions">
+            <p class="text-gray-500 text-center py-4">Yükleniyor...</p>
+        </div>
+    </div>
+</div>
+
+            <!-- Tesisler Page -->
+            <div id="tesisler-page" class="page-content p-8">
+                <div class="grid grid-cols-3 gap-6" id="facilitiesList">
+                    <p class="text-gray-500 col-span-3 text-center py-4">Yükleniyor...</p>
+                </div>
+            </div>
+
+            <!-- Projeler Page -->
+            <div id="projeler-page" class="page-content p-8">
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Aktif Projeler</h3>
+                    <div id="projectsList">
+                        <p class="text-gray-500 text-center py-4">Yükleniyor...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kurban Page -->
+            <div id="kurban-page" class="page-content p-8">
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-bold text-gray-800">Kurban Kayıtları</h3>
+                        <button onclick="openModal('sacrificeModal')" class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700">
+                            <i class="fas fa-plus mr-2"></i>Yeni Kayıt
+                        </button>
+                    </div>
+                    <div id="sacrificesList">
+                        <p class="text-gray-500 text-center py-4">Yükleniyor...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Personel Page -->
+            <div id="personel-page" class="page-content p-8">
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Personel Listesi</h3>
+                    <div id="personnelList">
+                        <p class="text-gray-500 text-center py-4">Yükleniyor...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gelir Modal -->
+    <div id="incomeModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
+            <h3 class="text-2xl font-bold mb-4">Yeni Gelir Kaydı</h3>
+            <form id="incomeForm" class="space-y-4">
+                <input type="text" placeholder="Başlık" class="w-full px-4 py-2 border rounded-lg" required>
+                <input type="number" placeholder="Tutar" class="w-full px-4 py-2 border rounded-lg" required>
+                <select class="w-full px-4 py-2 border rounded-lg" required>
+                    <option>Bağış</option>
+                    <option>Kurban</option>
+                    <option>Proje</option>
+                </select>
+                <div class="flex space-x-3">
+                    <button type="submit" class="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">Kaydet</button>
+                    <button type="button" onclick="closeModal('incomeModal')" class="flex-1 bg-gray-300 py-2 rounded-lg hover:bg-gray-400">İptal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Gider Modal -->
+    <div id="expenseModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
+            <h3 class="text-2xl font-bold mb-4">Yeni Gider Kaydı</h3>
+            <form id="expenseForm" class="space-y-4">
+                <input type="text" placeholder="Başlık" class="w-full px-4 py-2 border rounded-lg" required>
+                <input type="number" placeholder="Tutar" class="w-full px-4 py-2 border rounded-lg" required>
+                <select class="w-full px-4 py-2 border rounded-lg" required>
+                    <option>Tesis</option>
+                    <option>Personel</option>
+                    <option>Proje</option>
+                </select>
+                <div class="flex space-x-3">
+                    <button type="submit" class="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700">Kaydet</button>
+                    <button type="button" onclick="closeModal('expenseModal')" class="flex-1 bg-gray-300 py-2 rounded-lg hover:bg-gray-400">İptal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Proje Modal -->
+    <div id="projectModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
+            <h3 class="text-2xl font-bold mb-4">Yeni Proje</h3>
+            <form id="projectForm" class="space-y-4">
+                <input type="text" placeholder="Proje Adı" class="w-full px-4 py-2 border rounded-lg" required>
+                <input type="number" placeholder="Bütçe" class="w-full px-4 py-2 border rounded-lg" required>
+                <input type="date" class="w-full px-4 py-2 border rounded-lg" required>
+                <div class="flex space-x-3">
+                    <button type="submit" class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">Oluştur</button>
+                    <button type="button" onclick="closeModal('projectModal')" class="flex-1 bg-gray-300 py-2 rounded-lg hover:bg-gray-400">İptal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Kurban Modal -->
+    <div id="sacrificeModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
+            <h3 class="text-2xl font-bold mb-4">Kurban Kaydı</h3>
+            <form id="sacrificeForm" class="space-y-4">
+                <input type="text" placeholder="Bağışçı Adı" class="w-full px-4 py-2 border rounded-lg" required>
+                <input type="tel" placeholder="Telefon" class="w-full px-4 py-2 border rounded-lg" required>
+                <input type="number" placeholder="Tutar" class="w-full px-4 py-2 border rounded-lg" required>
+                <select class="w-full px-4 py-2 border rounded-lg" required>
+                    <option>Tek Kurban</option>
+                    <option>Hisseli Kurban</option>
+                </select>
+                <div class="flex space-x-3">
+                    <button type="submit" class="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700">Kaydet</button>
+                    <button type="button" onclick="closeModal('sacrificeModal')" class="flex-1 bg-gray-300 py-2 rounded-lg hover:bg-gray-400">İptal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="./js/dashboard.js"></script>
+<script src="./js/config.js"></script>
+<script src="./js/finance.js"></script>
+<script src="./js/modules.js"></script>
+<script src="./js/dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giriş - NGO System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gradient-to-br from-purple-600 to-blue-600 min-h-screen flex items-center justify-center">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
+        <div class="text-center mb-8">
+            <div class="w-16 h-16 bg-gradient-to-br from-purple-600 to-blue-600 rounded-xl mx-auto mb-4 flex items-center justify-center">
+                <i class="fas fa-heart text-white text-3xl"></i>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-800">Hoş Geldiniz</h1>
+            <p class="text-gray-500">Sisteme giriş yapın</p>
+        </div>
+
+        <form id="loginForm" class="space-y-6">
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">E-posta</label>
+                <div class="relative">
+                    <i class="fas fa-envelope absolute left-4 top-4 text-gray-400"></i>
+                    <input type="email" id="email" required
+                        class="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none"
+                        placeholder="ornek@email.com">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Şifre</label>
+                <div class="relative">
+                    <i class="fas fa-lock absolute left-4 top-4 text-gray-400"></i>
+                    <input type="password" id="password" required
+                        class="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none"
+                        placeholder="••••••••">
+                </div>
+            </div>
+
+            <button type="submit" id="loginBtn"
+                class="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 rounded-xl font-bold hover:shadow-xl transition-all">
+                <i class="fas fa-sign-in-alt mr-2"></i>Giriş Yap
+            </button>
+        </form>
+
+        <div id="message" class="mt-4 text-center text-sm"></div>
+
+        <div class="mt-6 p-4 bg-blue-50 rounded-xl">
+            <p class="text-xs text-gray-600 font-semibold mb-2">Demo Hesaplar:</p>
+            <p class="text-xs text-gray-500">📧 admin@ngo.org / 🔑 admin123</p>
+            <p class="text-xs text-gray-500">📧 mali@ngo.org / 🔑 mali123</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { supabase } from './js/config.js';
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const btn = document.getElementById('loginBtn');
+            const msg = document.getElementById('message');
+            
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Giriş yapılıyor...';
+            btn.disabled = true;
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) throw error;
+
+                msg.innerHTML = '<span class="text-green-600"><i class="fas fa-check-circle mr-1"></i>Başarılı! Yönlendiriliyorsunuz...</span>';
+                
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 1000);
+
+            } catch (error) {
+                msg.innerHTML = '<span class="text-red-600"><i class="fas fa-exclamation-circle mr-1"></i>' + error.message + '</span>';
+                btn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Giriş Yap';
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
