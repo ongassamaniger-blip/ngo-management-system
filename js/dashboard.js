@@ -74,16 +74,37 @@ async function loadAllData() {
     ]);
 }
 
-// Dashboard istatistikleri
+// Dashboard istatistikleri (Animasyonlu)
 async function loadDashboardStats() {
     const stats = await window.FinanceModule.getFinanceStats();
 
-    document.getElementById('totalIncome').textContent = formatCurrency(stats.totalIncome);
-    document.getElementById('totalExpense').textContent = formatCurrency(stats.totalExpense);
-    document.getElementById('balance').textContent = formatCurrency(stats.balance);
+    // Animasyonlu sayı güncelleme
+    animateValue('totalIncome', 0, stats.totalIncome, 1000);
+    animateValue('totalExpense', 0, stats.totalExpense, 1000);
+    animateValue('balance', 0, stats.balance, 1000);
 
     const facilities = await window.FacilityModule.getFacilities();
-    document.getElementById('totalFacilities').textContent = facilities.length;
+    animateValue('totalFacilities', 0, facilities.length, 800, false);
+}
+
+// Sayı animasyonu
+function animateValue(elementId, start, end, duration, isCurrency = true) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+
+    const range = end - start;
+    const increment = range / (duration / 16);
+    let current = start;
+
+    const timer = setInterval(() => {
+        current += increment;
+        if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
+            current = end;
+            clearInterval(timer);
+        }
+        
+        element.textContent = isCurrency ? formatCurrency(current) : Math.floor(current);
+    }, 16);
 }
 
 // Son işlemler
@@ -199,7 +220,6 @@ async function loadProjects() {
         </div>
     `).join('');
 }
-
 // Kurban kayıtları
 async function loadSacrifices() {
     const sacrifices = await window.SacrificeModule.getSacrifices();
@@ -296,17 +316,25 @@ function setupEventListeners() {
 
     // Form submit'leri
     setupFormHandlers();
+    
+    // Global arama
+    setupGlobalSearch();
+    
+    // Bildirimleri yükle
+    loadNotifications();
 }
 
 // Sayfa navigasyonu
 function navigateToPage(page) {
     // Menü aktifliği
     document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
-    document.querySelector(`[data-page="${page}"]`).classList.add('active');
+    const menuItem = document.querySelector(`[data-page="${page}"]`);
+    if (menuItem) menuItem.classList.add('active');
 
     // Sayfa görünürlüğü
     document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
-    document.getElementById(`${page}-page`).classList.add('active');
+    const pageContent = document.getElementById(`${page}-page`);
+    if (pageContent) pageContent.classList.add('active');
 
     // Başlık güncelle
     const titles = {
@@ -318,8 +346,10 @@ function navigateToPage(page) {
         'personel': ['Personel', 'Personel Yönetimi']
     };
     
-    document.getElementById('pageTitle').textContent = titles[page][0];
-    document.getElementById('pageSubtitle').textContent = titles[page][1];
+    if (titles[page]) {
+        document.getElementById('pageTitle').textContent = titles[page][0];
+        document.getElementById('pageSubtitle').textContent = titles[page][1];
+    }
 }
 
 // Form işleyicileri
@@ -427,13 +457,19 @@ function setupFormHandlers() {
 
 // Modal fonksiyonları
 window.openModal = (modalId) => {
-    document.getElementById(modalId).classList.remove('hidden');
-    document.getElementById(modalId).classList.add('flex');
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
 };
 
 window.closeModal = (modalId) => {
-    document.getElementById(modalId).classList.add('hidden');
-    document.getElementById(modalId).classList.remove('flex');
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
 };
 
 // Toast bildirimi
@@ -529,7 +565,6 @@ function getSacrificeStatusText(status) {
     };
     return texts[status] || status;
 }
-
 // ==================== FİLTRELEME VE RAPORLAMA ====================
 
 let currentFilters = {};
@@ -668,3 +703,295 @@ function getCategoryText(category) {
 window.viewFacilityDetail = function(facilityId) {
     showToast('Tesis detay sayfası yakında eklenecek!', 'info');
 };
+
+// ==================== BİLDİRİM SİSTEMİ ====================
+
+let notificationsOpen = false;
+
+// Bildirimleri yükle
+async function loadNotifications() {
+    const { data: session } = await supabase.auth.getSession();
+    if (!session?.session?.user) return;
+
+    const { data: user } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', session.session.user.email)
+        .single();
+
+    if (!user) return;
+
+    const { data: notifications } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+    updateNotificationBadge(notifications);
+    renderNotifications(notifications);
+}
+
+// Bildirim badge'ini güncelle
+function updateNotificationBadge(notifications) {
+    const badge = document.getElementById('notificationBadge');
+    if (!badge) return;
+
+    const unreadCount = notifications?.filter(n => !n.is_read).length || 0;
+    
+    if (unreadCount > 0) {
+        badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+        badge.classList.remove('hidden');
+    } else {
+        badge.classList.add('hidden');
+    }
+}
+
+// Bildirimleri render et
+function renderNotifications(notifications) {
+    const container = document.getElementById('notificationList');
+    if (!container) return;
+
+    if (!notifications || notifications.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 text-center py-8 text-sm">Henüz bildirim yok</p>';
+        return;
+    }
+
+    container.innerHTML = notifications.map(n => `
+        <div class="p-4 border-b border-gray-100 hover:bg-gray-50 transition cursor-pointer ${n.is_read ? 'opacity-60' : 'bg-blue-50'}" onclick="markAsRead('${n.id}')">
+            <div class="flex items-start">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center mr-3 ${getNotificationIconBg(n.type)}">
+                    <i class="fas ${getNotificationIcon(n.type)} ${getNotificationIconColor(n.type)}"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="font-semibold text-gray-800 text-sm">${n.title}</p>
+                    <p class="text-xs text-gray-600 mt-1">${n.message}</p>
+                    <p class="text-xs text-gray-400 mt-2">${formatTimeAgo(n.created_at)}</p>
+                </div>
+                ${!n.is_read ? '<div class="w-2 h-2 bg-blue-500 rounded-full"></div>' : ''}
+            </div>
+        </div>
+    `).join('');
+}
+
+// Bildirim modalını aç/kapat
+window.toggleNotifications = function() {
+    const modal = document.getElementById('notificationModal');
+    if (!modal) return;
+
+    notificationsOpen = !notificationsOpen;
+
+    if (notificationsOpen) {
+        modal.classList.remove('hidden');
+        loadNotifications();
+    } else {
+        modal.classList.add('hidden');
+    }
+};
+
+// Bildirimleri kapat
+window.closeNotifications = function() {
+    const modal = document.getElementById('notificationModal');
+    if (modal) modal.classList.add('hidden');
+    notificationsOpen = false;
+};
+
+// Bildirimi okundu işaretle
+window.markAsRead = async function(notificationId) {
+    await supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('id', notificationId);
+
+    await loadNotifications();
+};
+
+// Tümünü okundu işaretle
+window.markAllAsRead = async function() {
+    const { data: session } = await supabase.auth.getSession();
+    if (!session?.session?.user) return;
+
+    const { data: user } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', session.session.user.email)
+        .single();
+
+    if (!user) return;
+
+    await supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('user_id', user.id)
+        .eq('is_read', false);
+
+    await loadNotifications();
+    showToast('Tüm bildirimler okundu işaretlendi', 'success');
+};
+
+// Bildirim ikonu
+function getNotificationIcon(type) {
+    const icons = {
+        'info': 'fa-info-circle',
+        'success': 'fa-check-circle',
+        'warning': 'fa-exclamation-triangle',
+        'error': 'fa-times-circle'
+    };
+    return icons[type] || 'fa-bell';
+}
+
+// Bildirim ikon arkaplanı
+function getNotificationIconBg(type) {
+    const colors = {
+        'info': 'bg-blue-100',
+        'success': 'bg-green-100',
+        'warning': 'bg-yellow-100',
+        'error': 'bg-red-100'
+    };
+    return colors[type] || 'bg-gray-100';
+}
+
+// Bildirim ikon rengi
+function getNotificationIconColor(type) {
+    const colors = {
+        'info': 'text-blue-600',
+        'success': 'text-green-600',
+        'warning': 'text-yellow-600',
+        'error': 'text-red-600'
+    };
+    return colors[type] || 'text-gray-600';
+}
+
+// Zaman farkı hesapla
+function formatTimeAgo(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Şimdi';
+    if (diffMins < 60) return `${diffMins} dakika önce`;
+    if (diffHours < 24) return `${diffHours} saat önce`;
+    if (diffDays < 7) return `${diffDays} gün önce`;
+    return formatDate(dateString);
+}
+
+// ==================== GLOBAL ARAMA ====================
+
+let searchTimeout;
+
+// Arama event listener'ını kur
+function setupGlobalSearch() {
+    const searchInput = document.getElementById('globalSearch');
+    if (!searchInput) return;
+
+    searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            performGlobalSearch(e.target.value);
+        }, 300);
+    });
+}
+
+// Global arama yap
+async function performGlobalSearch(query) {
+    if (!query || query.length < 2) return;
+
+    const lowerQuery = query.toLowerCase();
+
+    // İşlemlerde ara
+    const transactions = await window.FinanceModule.getTransactions();
+    const matchingTransactions = transactions.filter(t => 
+        t.title.toLowerCase().includes(lowerQuery) ||
+        t.category.toLowerCase().includes(lowerQuery)
+    );
+
+    // Tesislerde ara
+    const facilities = await window.FacilityModule.getFacilities();
+    const matchingFacilities = facilities.filter(f => 
+        f.name.toLowerCase().includes(lowerQuery) ||
+        f.city.toLowerCase().includes(lowerQuery) ||
+        f.country.toLowerCase().includes(lowerQuery)
+    );
+
+    // Projelerde ara
+    const projects = await window.ProjectModule.getProjects();
+    const matchingProjects = projects.filter(p => 
+        p.name.toLowerCase().includes(lowerQuery) ||
+        (p.description && p.description.toLowerCase().includes(lowerQuery))
+    );
+
+    // Sonuçları göster
+    showSearchResults(matchingTransactions, matchingFacilities, matchingProjects);
+}
+
+// Arama sonuçlarını göster
+function showSearchResults(transactions, facilities, projects) {
+    const totalResults = transactions.length + facilities.length + projects.length;
+
+    if (totalResults === 0) {
+        showToast('Sonuç bulunamadı', 'info');
+        return;
+    }
+
+    let message = `${totalResults} sonuç bulundu: `;
+    if (transactions.length > 0) message += `${transactions.length} işlem `;
+    if (facilities.length > 0) message += `${facilities.length} tesis `;
+    if (projects.length > 0) message += `${projects.length} proje`;
+
+    showToast(message, 'success');
+}
+
+// ==================== KLAVYE KISAYOLLARI ====================
+
+document.addEventListener('keydown', (e) => {
+    // Ctrl/Cmd tuşu ile kombinasyonlar
+    if (e.ctrlKey || e.metaKey) {
+        switch(e.key.toLowerCase()) {
+            case 'k': // Ctrl+K: Arama
+                e.preventDefault();
+                document.getElementById('globalSearch')?.focus();
+                break;
+            case 'n': // Ctrl+N: Yeni Gelir
+                e.preventDefault();
+                openModal('incomeModal');
+                break;
+            case 'e': // Ctrl+E: Yeni Gider
+                e.preventDefault();
+                openModal('expenseModal');
+                break;
+            case 'b': // Ctrl+B: Bildirimler
+                e.preventDefault();
+                toggleNotifications();
+                break;
+        }
+    }
+
+    // Escape: Modal'ları kapat
+    if (e.key === 'Escape') {
+        closeAllModals();
+    }
+
+    // Sayı tuşları: Hızlı sayfa geçişi
+    if (e.altKey) {
+        const pages = ['dashboard', 'finans', 'tesisler', 'projeler', 'kurban', 'personel'];
+        const keyNum = parseInt(e.key);
+        if (keyNum >= 1 && keyNum <= pages.length) {
+            e.preventDefault();
+            navigateToPage(pages[keyNum - 1]);
+        }
+    }
+});
+
+// Tüm modal'ları kapat
+function closeAllModals() {
+    ['incomeModal', 'expenseModal', 'projectModal', 'sacrificeModal', 'notificationModal'].forEach(modalId => {
+        const modal = document.getElementById(modalId);
+        if (modal && !modal.classList.contains('hidden')) {
+            closeModal(modalId);
+        }
+    });
+    closeNotifications();
+}

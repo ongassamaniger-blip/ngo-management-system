@@ -43,7 +43,7 @@ async function addExpense(data) {
     return { success: true };
 }
 
-// TÜM İŞLEMLERİ ÇEKME (DÜZELTME!)
+// TÜM İŞLEMLERİ ÇEKME
 async function getTransactions(filters = {}) {
     let query = supabase
         .from('transactions')

@@ -27,7 +27,7 @@ async function createProject(data) {
     return { success: true, data: project[0] };
 }
 
-// Projeleri listele (DÜZELTME!)
+// Projeleri listele
 async function getProjects(filters = {}) {
     let query = supabase
         .from('projects')
@@ -119,7 +119,7 @@ async function createSacrifice(data) {
     return { success: true, data: sacrifice[0] };
 }
 
-// Kurban kayıtlarını listele (DÜZELTME!)
+// Kurban kayıtlarını listele
 async function getSacrifices(filters = {}) {
     let query = supabase
         .from('sacrifices')
@@ -186,7 +186,7 @@ async function addPersonnel(data) {
     return { success: true };
 }
 
-// Personel listesi (DÜZELTME!)
+// Personel listesi
 async function getPersonnel(filters = {}) {
     let query = supabase
         .from('personnel')
