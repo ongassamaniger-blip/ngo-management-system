@@ -1,5 +1,57 @@
 <!DOCTYPE html>
 <html lang="tr">
+<style>
+    /* Loading Overlay */
+    #loadingOverlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(5px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        opacity: 1;
+        transition: opacity 0.3s ease;
+    }
+    
+    #loadingOverlay.hidden {
+        opacity: 0;
+        pointer-events: none;
+    }
+    
+    .loader {
+        width: 50px;
+        height: 50px;
+        border: 5px solid rgba(255, 255, 255, 0.3);
+        border-top-color: #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    /* Toast animasyonu */
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    .animate-fade-in {
+        animation: slideInRight 0.3s ease;
+    }
+</style>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -99,24 +151,35 @@
 
         <!-- Main Content -->
         <div class="flex-1 ml-64">
-            <!-- Header -->
-            <header class="bg-white shadow-sm sticky top-0 z-40">
-                <div class="flex items-center justify-between px-8 py-4">
-                    <div>
-                        <h2 class="text-2xl font-bold text-gray-800" id="pageTitle">Dashboard</h2>
-                        <p class="text-sm text-gray-500" id="pageSubtitle">Genel Bakış</p>
-                    </div>
-                    <div class="flex items-center space-x-4">
-                        <div class="w-10 h-10 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center text-white font-bold">
-                            <span id="userInitials">--</span>
-                        </div>
-                        <div>
-                            <p class="text-sm font-semibold text-gray-800" id="userName">Yükleniyor...</p>
-                            <p class="text-xs text-gray-500" id="userRole">--</p>
-                        </div>
-                    </div>
-                </div>
-            </header>
+      <!-- Header -->
+<header class="bg-white shadow-sm sticky top-0 z-40">
+    <div class="flex items-center justify-between px-8 py-4">
+        <!-- Mobile Menu Button -->
+        <button id="mobileMenuBtn" class="lg:hidden text-gray-600 hover:text-purple-600">
+            <i class="fas fa-bars text-2xl"></i>
+        </button>
+        
+        <div>
+            <h2 class="text-2xl font-bold text-gray-800" id="pageTitle">Dashboard</h2>
+            <p class="text-sm text-gray-500" id="pageSubtitle">Genel Bakış</p>
+        </div>
+        <div class="flex items-center space-x-4">
+            <!-- Bildirimler -->
+            <button class="relative text-gray-600 hover:text-purple-600">
+                <i class="fas fa-bell text-xl"></i>
+                <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-white text-xs flex items-center justify-center">3</span>
+            </button>
+            
+            <div class="w-10 h-10 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center text-white font-bold cursor-pointer hover:shadow-lg transition">
+                <span id="userInitials">--</span>
+            </div>
+            <div class="hidden md:block">
+                <p class="text-sm font-semibold text-gray-800" id="userName">Yükleniyor...</p>
+                <p class="text-xs text-gray-500" id="userRole">--</p>
+            </div>
+        </div>
+    </div>
+</header>
 
             <!-- Dashboard Page -->
             <div id="dashboard-page" class="page-content active p-8">
@@ -170,7 +233,29 @@
                         <p class="font-semibold text-gray-800">Kurban Kayıt</p>
                     </button>
                 </div>
-
+<!-- Hoş Geldin Mesajı -->
+<div class="bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl p-8 text-white mb-8">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-3xl font-bold mb-2">Hoş Geldiniz! 👋</h2>
+            <p class="text-lg opacity-90 mb-4">NGO Yönetim Sistemi'ne hoş geldiniz. Hızlı işlemler için aşağıdaki butonları kullanabilirsiniz.</p>
+            <div class="flex space-x-3">
+                <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm">
+                    <i class="fas fa-check-circle mr-1"></i>Gerçek zamanlı veriler
+                </span>
+                <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm">
+                    <i class="fas fa-shield-alt mr-1"></i>Güvenli
+                </span>
+                <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm">
+                    <i class="fas fa-cloud mr-1"></i>Bulut tabanlı
+                </span>
+            </div>
+        </div>
+        <div class="hidden md:block">
+            <i class="fas fa-chart-line text-8xl opacity-20"></i>
+        </div>
+    </div>
+</div>
                 <!-- Recent Transactions -->
                 <div class="bg-white rounded-2xl shadow-lg p-6">
                     <h3 class="text-xl font-bold text-gray-800 mb-4">Son İşlemler</h3>
@@ -406,4 +491,11 @@
 <script src="./js/modules.js"></script>
 <script src="./js/dashboard.js"></script>
 </body>
+<!-- Loading Overlay -->
+<div id="loadingOverlay">
+    <div class="text-center">
+        <div class="loader mx-auto mb-4"></div>
+        <p class="text-white text-lg font-semibold">Yükleniyor...</p>
+    </div>
+</div>
 </html>

@@ -2,26 +2,47 @@
 
 // Sayfa yüklendiğinde
 document.addEventListener('DOMContentLoaded', async () => {
-    await initDashboard();
-});
+    async function initDashboard() {
+    // Loading göster
+    const loading = document.getElementById('loadingOverlay');
+    if (loading) loading.classList.remove('hidden');
 
-async function initDashboard() {
-    // Auth kontrolü
-    const { data: { session } } = await supabase.auth.getSession();
+    try {
+        // Auth kontrolü
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+            window.location.href = 'login.html';
+            return;
+        }
+
+        // Kullanıcı bilgilerini yükle
+        await loadUserInfo(session.user);
+
+        // Verileri yükle
+        await loadAllData();
+
+        // Event listener'ları kur
+        setupEventListeners();
+    // Mobile menu toggle
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const sidebar = document.querySelector('.sidebar');
     
-    if (!session) {
-        window.location.href = 'login.html';
-        return;
+    if (mobileMenuBtn && sidebar) {
+        mobileMenuBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('hidden');
+        });
     }
-
-    // Kullanıcı bilgilerini yükle
-    await loadUserInfo(session.user);
-
-    // Verileri yükle
-    await loadAllData();
-
-    // Event listener'ları kur
-    setupEventListeners();
+        
+    } catch (error) {
+        console.error('Dashboard yükleme hatası:', error);
+        showToast('Bir hata oluştu, lütfen sayfayı yenileyin', 'error');
+    } finally {
+        // Loading gizle
+        setTimeout(() => {
+            if (loading) loading.classList.add('hidden');
+        }, 500);
+    }
 }
 
 // Kullanıcı bilgileri
@@ -272,7 +293,59 @@ function setupEventListeners() {
     // Form submit'leri
     setupFormHandlers();
 }
+    // Proje formu
+    const projectForm = document.getElementById('projectForm');
+    if (projectForm) {
+        projectForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const inputs = projectForm.querySelectorAll('input');
+            
+            const result = await window.ProjectModule.createProject({
+                name: inputs[0].value,
+                budget: inputs[1].value,
+                startDate: inputs[2].value,
+                category: 'humanitarian_aid',
+                description: 'Yeni proje'
+            });
 
+            if (result.success) {
+                showToast('Proje başarıyla oluşturuldu!', 'success');
+                closeModal('projectModal');
+                e.target.reset();
+                await loadAllData();
+            } else {
+                showToast('Hata oluştu: ' + (result.error?.message || 'Bilinmeyen hata'), 'error');
+            }
+        });
+    }
+
+    // Kurban formu
+    const sacrificeForm = document.getElementById('sacrificeForm');
+    if (sacrificeForm) {
+        sacrificeForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const inputs = sacrificeForm.querySelectorAll('input, select');
+            
+            const result = await window.SacrificeModule.createSacrifice({
+                donorName: inputs[0].value,
+                donorPhone: inputs[1].value,
+                amount: inputs[2].value,
+                sacrificeType: inputs[3].value.toLowerCase().includes('tek') ? 'single' : 'shared',
+                animalType: 'sheep',
+                sacrificeDate: new Date().toISOString().split('T')[0],
+                paymentStatus: 'paid'
+            });
+
+            if (result.success) {
+                showToast('Kurban kaydı başarıyla oluşturuldu!', 'success');
+                closeModal('sacrificeModal');
+                e.target.reset();
+                await loadAllData();
+            } else {
+                showToast('Hata oluştu: ' + (result.error?.message || 'Bilinmeyen hata'), 'error');
+            }
+        });
+    }
 // Sayfa navigasyonu
 function navigateToPage(page) {
     // Menü aktifliği
