@@ -2,7 +2,10 @@
 
 // Sayfa yüklendiğinde
 document.addEventListener('DOMContentLoaded', async () => {
-    async function initDashboard() {
+    await initDashboard();
+});
+
+async function initDashboard() {
     // Loading göster
     const loading = document.getElementById('loadingOverlay');
     if (loading) loading.classList.remove('hidden');
@@ -24,15 +27,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Event listener'ları kur
         setupEventListeners();
-    // Mobile menu toggle
-    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-    const sidebar = document.querySelector('.sidebar');
-    
-    if (mobileMenuBtn && sidebar) {
-        mobileMenuBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('hidden');
-        });
-    }
         
     } catch (error) {
         console.error('Dashboard yükleme hatası:', error);
@@ -257,11 +251,11 @@ async function loadPersonnel() {
         <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg mb-3 hover:bg-gray-50 transition">
             <div class="flex items-center">
                 <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold mr-3">
-                    ${p.users?.full_name?.split(' ').map(n => n[0]).join('').toUpperCase()}
+                    ${p.users?.full_name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'N/A'}
                 </div>
                 <div>
-                    <p class="font-semibold text-gray-800">${p.users?.full_name}</p>
-                    <p class="text-sm text-gray-500">${p.position} • ${p.facilities?.name}</p>
+                    <p class="font-semibold text-gray-800">${p.users?.full_name || 'N/A'}</p>
+                    <p class="text-sm text-gray-500">${p.position} • ${p.facilities?.name || 'N/A'}</p>
                 </div>
             </div>
             <div class="text-right">
@@ -290,62 +284,20 @@ function setupEventListeners() {
         window.location.href = 'login.html';
     });
 
+    // Mobile menu toggle
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const sidebar = document.querySelector('.sidebar');
+    
+    if (mobileMenuBtn && sidebar) {
+        mobileMenuBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('hidden');
+        });
+    }
+
     // Form submit'leri
     setupFormHandlers();
 }
-    // Proje formu
-    const projectForm = document.getElementById('projectForm');
-    if (projectForm) {
-        projectForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const inputs = projectForm.querySelectorAll('input');
-            
-            const result = await window.ProjectModule.createProject({
-                name: inputs[0].value,
-                budget: inputs[1].value,
-                startDate: inputs[2].value,
-                category: 'humanitarian_aid',
-                description: 'Yeni proje'
-            });
 
-            if (result.success) {
-                showToast('Proje başarıyla oluşturuldu!', 'success');
-                closeModal('projectModal');
-                e.target.reset();
-                await loadAllData();
-            } else {
-                showToast('Hata oluştu: ' + (result.error?.message || 'Bilinmeyen hata'), 'error');
-            }
-        });
-    }
-
-    // Kurban formu
-    const sacrificeForm = document.getElementById('sacrificeForm');
-    if (sacrificeForm) {
-        sacrificeForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const inputs = sacrificeForm.querySelectorAll('input, select');
-            
-            const result = await window.SacrificeModule.createSacrifice({
-                donorName: inputs[0].value,
-                donorPhone: inputs[1].value,
-                amount: inputs[2].value,
-                sacrificeType: inputs[3].value.toLowerCase().includes('tek') ? 'single' : 'shared',
-                animalType: 'sheep',
-                sacrificeDate: new Date().toISOString().split('T')[0],
-                paymentStatus: 'paid'
-            });
-
-            if (result.success) {
-                showToast('Kurban kaydı başarıyla oluşturuldu!', 'success');
-                closeModal('sacrificeModal');
-                e.target.reset();
-                await loadAllData();
-            } else {
-                showToast('Hata oluştu: ' + (result.error?.message || 'Bilinmeyen hata'), 'error');
-            }
-        });
-    }
 // Sayfa navigasyonu
 function navigateToPage(page) {
     // Menü aktifliği
@@ -377,21 +329,20 @@ function setupFormHandlers() {
     if (incomeForm) {
         incomeForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const formData = new FormData(e.target);
             
             const result = await window.FinanceModule.addIncome({
-                title: formData.get('title') || incomeForm.querySelector('input[type="text"]').value,
-                amount: formData.get('amount') || incomeForm.querySelector('input[type="number"]').value,
-                category: formData.get('category') || incomeForm.querySelector('select').value.toLowerCase()
+                title: incomeForm.querySelector('input[type="text"]').value,
+                amount: incomeForm.querySelector('input[type="number"]').value,
+                category: incomeForm.querySelector('select').value.toLowerCase()
             });
 
             if (result.success) {
                 showToast('Gelir başarıyla kaydedildi!', 'success');
                 closeModal('incomeModal');
-                e.target.reset();
+                incomeForm.reset();
                 await loadAllData();
             } else {
-                showToast('Hata oluştu: ' + result.error.message, 'error');
+                showToast('Hata oluştu: ' + (result.error?.message || 'Bilinmeyen hata'), 'error');
             }
         });
     }
@@ -401,21 +352,74 @@ function setupFormHandlers() {
     if (expenseForm) {
         expenseForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const formData = new FormData(e.target);
             
             const result = await window.FinanceModule.addExpense({
-                title: formData.get('title') || expenseForm.querySelector('input[type="text"]').value,
-                amount: formData.get('amount') || expenseForm.querySelector('input[type="number"]').value,
-                category: formData.get('category') || expenseForm.querySelector('select').value.toLowerCase()
+                title: expenseForm.querySelector('input[type="text"]').value,
+                amount: expenseForm.querySelector('input[type="number"]').value,
+                category: expenseForm.querySelector('select').value.toLowerCase()
             });
 
             if (result.success) {
                 showToast('Gider başarıyla kaydedildi!', 'success');
                 closeModal('expenseModal');
-                e.target.reset();
+                expenseForm.reset();
                 await loadAllData();
             } else {
-                showToast('Hata oluştu: ' + result.error.message, 'error');
+                showToast('Hata oluştu: ' + (result.error?.message || 'Bilinmeyen hata'), 'error');
+            }
+        });
+    }
+
+    // Proje formu
+    const projectForm = document.getElementById('projectForm');
+    if (projectForm) {
+        projectForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const inputs = projectForm.querySelectorAll('input');
+            
+            const result = await window.ProjectModule.createProject({
+                name: inputs[0].value,
+                budget: inputs[1].value,
+                startDate: inputs[2].value,
+                category: 'humanitarian_aid',
+                description: 'Yeni proje'
+            });
+
+            if (result.success) {
+                showToast('Proje başarıyla oluşturuldu!', 'success');
+                closeModal('projectModal');
+                projectForm.reset();
+                await loadAllData();
+            } else {
+                showToast('Hata oluştu: ' + (result.error?.message || 'Bilinmeyen hata'), 'error');
+            }
+        });
+    }
+
+    // Kurban formu
+    const sacrificeForm = document.getElementById('sacrificeForm');
+    if (sacrificeForm) {
+        sacrificeForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const inputs = sacrificeForm.querySelectorAll('input, select');
+            
+            const result = await window.SacrificeModule.createSacrifice({
+                donorName: inputs[0].value,
+                donorPhone: inputs[1].value,
+                amount: inputs[2].value,
+                sacrificeType: inputs[3].value.toLowerCase().includes('tek') ? 'single' : 'shared',
+                animalType: 'sheep',
+                sacrificeDate: new Date().toISOString().split('T')[0],
+                paymentStatus: 'paid'
+            });
+
+            if (result.success) {
+                showToast('Kurban kaydı başarıyla oluşturuldu!', 'success');
+                closeModal('sacrificeModal');
+                sacrificeForm.reset();
+                await loadAllData();
+            } else {
+                showToast('Hata oluştu: ' + (result.error?.message || 'Bilinmeyen hata'), 'error');
             }
         });
     }
@@ -646,13 +650,18 @@ window.exportReport = async function() {
 function getCategoryText(category) {
     const texts = {
         'donation': 'Bağış',
+        'bağış': 'Bağış',
         'sacrifice': 'Kurban',
+        'kurban': 'Kurban',
         'project': 'Proje',
+        'proje': 'Proje',
         'facility': 'Tesis',
+        'tesis': 'Tesis',
         'salary': 'Maaş',
+        'personel': 'Personel',
         'other': 'Diğer'
     };
-    return texts[category] || category;
+    return texts[category.toLowerCase()] || category;
 }
 
 // Tesis detayını göster

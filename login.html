@@ -89,6 +89,41 @@
                 btn.disabled = false;
             }
         });
-    </script>
+   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./js/config.js"></script>
+<script>
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const btn = document.getElementById('loginBtn');
+        const msg = document.getElementById('message');
+        
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Giriş yapılıyor...';
+        btn.disabled = true;
+
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        try {
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: email,
+                password: password
+            });
+
+            if (error) throw error;
+
+            msg.innerHTML = '<span class="text-green-600"><i class="fas fa-check-circle mr-1"></i>Başarılı! Yönlendiriliyorsunuz...</span>';
+            
+            setTimeout(() => {
+                window.location.href = 'dashboard.html';
+            }, 1000);
+
+        } catch (error) {
+            msg.innerHTML = '<span class="text-red-600"><i class="fas fa-exclamation-circle mr-1"></i>' + error.message + '</span>';
+            btn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Giriş Yap';
+            btn.disabled = false;
+        }
+    });
+</script>
 </body>
 </html>
