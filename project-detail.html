@@ -3,12 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Proje Detayı - NGO System</title>
+    <title>Sudan Su Kuyusu Projesi - Detaylı Yönetim</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+        }
+
         .sidebar {
             background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
             box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
@@ -34,6 +44,11 @@
             border-radius: 16px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
             transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
         }
 
         @keyframes fadeIn {
@@ -76,9 +91,94 @@
             border-radius: 10px;
             transition: width 1s ease;
         }
+
+        .timeline {
+            position: relative;
+            padding-left: 40px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e5e7eb;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 30px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -32px;
+            top: 8px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid #667eea;
+            z-index: 1;
+        }
+
+        .timeline-item.completed::before {
+            background: #10b981;
+            border-color: #10b981;
+        }
+
+        .timeline-item.pending::before {
+            background: #f59e0b;
+            border-color: #f59e0b;
+        }
+
+        .task-item {
+            transition: all 0.3s ease;
+        }
+
+        .task-item:hover {
+            background: #f9fafb;
+            transform: translateX(5px);
+        }
+
+        .task-checkbox {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .task-checkbox:checked + label {
+            text-decoration: line-through;
+            opacity: 0.5;
+        }
+
+        .gantt-bar {
+            height: 30px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .gantt-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2));
+        }
     </style>
 </head>
-<body class="bg-gray-50">
+<body>
     <div class="flex min-h-screen">
         <!-- Sidebar -->
         <div class="sidebar w-64 fixed h-full z-50">
@@ -94,26 +194,38 @@
                 </div>
 
                 <nav class="space-y-2">
-                    <a href="dashboard.html" class="menu-item px-4 py-3 rounded-lg text-white flex items-center">
+                    <div class="menu-item px-4 py-3 rounded-lg text-white">
                         <i class="fas fa-home w-6"></i>
                         <span class="ml-3">Dashboard</span>
-                    </a>
-                    <a href="dashboard.html#finans" class="menu-item px-4 py-3 rounded-lg text-white flex items-center">
+                    </div>
+                    <div class="menu-item px-4 py-3 rounded-lg text-white">
                         <i class="fas fa-wallet w-6"></i>
                         <span class="ml-3">Finans</span>
-                    </a>
-                    <a href="dashboard.html#tesisler" class="menu-item px-4 py-3 rounded-lg text-white flex items-center">
+                    </div>
+                    <div class="menu-item px-4 py-3 rounded-lg text-white">
                         <i class="fas fa-building w-6"></i>
                         <span class="ml-3">Tesisler</span>
-                    </a>
-                    <a href="dashboard.html#projeler" class="menu-item active px-4 py-3 rounded-lg text-white flex items-center">
+                    </div>
+                    <div class="menu-item active px-4 py-3 rounded-lg text-white">
                         <i class="fas fa-project-diagram w-6"></i>
                         <span class="ml-3">Projeler</span>
-                    </a>
-                    <a href="dashboard.html#kurban" class="menu-item px-4 py-3 rounded-lg text-white flex items-center">
+                    </div>
+                    <div class="menu-item px-4 py-3 rounded-lg text-white">
                         <i class="fas fa-mosque w-6"></i>
                         <span class="ml-3">Kurban</span>
-                    </a>
+                    </div>
+                    <div class="menu-item px-4 py-3 rounded-lg text-white">
+                        <i class="fas fa-users w-6"></i>
+                        <span class="ml-3">Personel</span>
+                    </div>
+                    <div class="menu-item px-4 py-3 rounded-lg text-white">
+                        <i class="fas fa-check-circle w-6"></i>
+                        <span class="ml-3">Onaylar</span>
+                    </div>
+                    <div class="menu-item px-4 py-3 rounded-lg text-white">
+                        <i class="fas fa-cog w-6"></i>
+                        <span class="ml-3">Ayarlar</span>
+                    </div>
                 </nav>
             </div>
         </div>
@@ -124,26 +236,33 @@
             <header class="bg-white shadow-sm sticky top-0 z-40">
                 <div class="flex items-center justify-between px-8 py-4">
                     <div class="flex items-center space-x-4">
-                        <button onclick="window.location.href='dashboard.html'" class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gray-200 transition">
+                        <button onclick="window.history.back()" class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gray-200 transition">
                             <i class="fas fa-arrow-left text-gray-600"></i>
                         </button>
                         <div>
-                            <h2 class="text-2xl font-bold text-gray-800" id="projectName">Yükleniyor...</h2>
+                            <h2 class="text-2xl font-bold text-gray-800">Sudan Su Kuyusu Projesi</h2>
                             <p class="text-sm text-gray-500">
-                                <span id="projectCode">-</span> • 
-                                <span id="projectFacility">-</span>
+                                <i class="fas fa-map-marker-alt mr-1"></i>Hartum, Sudan
+                                <span class="mx-2">•</span>
+                                <i class="fas fa-calendar mr-1"></i>01 May - 30 Kas 2025
                             </p>
                         </div>
-                        <span id="projectStatus" class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">-</span>
+                        <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">Devam Ediyor</span>
                     </div>
 
                     <div class="flex items-center space-x-4">
+                        <button class="px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl font-semibold hover:shadow-xl transition">
+                            <i class="fas fa-check mr-2"></i>Tamamla
+                        </button>
                         <button class="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-semibold hover:shadow-xl transition">
                             <i class="fas fa-edit mr-2"></i>Düzenle
                         </button>
-                        <button onclick="exportProjectReport()" class="px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl font-semibold hover:shadow-xl transition">
-                            <i class="fas fa-file-export mr-2"></i>Rapor Al
+                        <button class="px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl font-semibold hover:shadow-xl transition">
+                            <i class="fas fa-file-export mr-2"></i>Rapor
                         </button>
+                        <div class="w-10 h-10 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center text-white font-bold">
+                            AY
+                        </div>
                     </div>
                 </div>
             </header>
@@ -151,92 +270,99 @@
             <!-- Content -->
             <div class="p-8">
                 <!-- Hero Section -->
-                <div class="h-64 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-8 relative overflow-hidden fade-in">
+                <div class="h-64 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl mb-8 relative overflow-hidden fade-in">
                     <div class="absolute inset-0 bg-black bg-opacity-30"></div>
                     <div class="relative h-full flex items-end p-8">
-                        <div class="text-white">
-                            <div class="flex items-center space-x-4 mb-4">
-                                <div class="w-20 h-20 bg-white bg-opacity-20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                                    <span class="text-4xl font-bold" id="projectInitials">--</span>
+                        <div class="text-white w-full">
+                            <div class="flex items-center justify-between mb-4">
+                                <div>
+                                    <div class="flex items-center space-x-4 mb-2">
+                                        <div class="w-16 h-16 bg-white bg-opacity-20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                                            <i class="fas fa-tint text-3xl"></i>
+                                        </div>
+                                        <div>
+                                            <h1 class="text-4xl font-bold mb-1">Sudan Su Kuyusu Projesi</h1>
+                                            <p class="text-lg text-blue-100">Kırsal bölgelerde temiz su erişimi</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm text-blue-200 mb-1">İlerleme</p>
+                                    <p class="text-5xl font-bold">45%</p>
+                                </div>
+                            </div>
+                            <div class="progress-bar h-3">
+                                <div class="progress-fill bg-white bg-opacity-80" style="width: 45%"></div>
+                            </div>
+                            <div class="flex items-center justify-between mt-4 text-sm">
+                                <div class="flex items-center space-x-6">
+                                    <span><i class="fas fa-calendar mr-2"></i>7 Ay Süre</span>
+                                    <span><i class="fas fa-wallet mr-2"></i>₺750.000 Bütçe</span>
+                                    <span><i class="fas fa-users mr-2"></i>12 Ekip Üyesi</span>
+                                    <span><i class="fas fa-tasks mr-2"></i>18/32 Görev</span>
                                 </div>
                                 <div>
-                                    <h1 class="text-4xl font-bold mb-2" id="projectNameHero">Proje Adı</h1>
-                                    <p class="text-lg text-blue-100" id="projectDescHero">Proje açıklaması</p>
+                                    <span class="text-blue-200">Kalan Süre: </span>
+                                    <span class="font-bold">4 Ay</span>
                                 </div>
                             </div>
-                            <div class="flex items-center space-x-6 text-sm">
-                                <span><i class="fas fa-calendar mr-2"></i>Başlangıç: <span id="projectStartDate">-</span></span>
-                                <span><i class="fas fa-wallet mr-2"></i>Bütçe: <span id="projectBudget">₺0</span></span>
-                                <span><i class="fas fa-chart-line mr-2"></i>İlerleme: <span id="projectProgress">0%</span></span>
-                            </div>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Progress Bar -->
-                <div class="bg-white rounded-2xl shadow-lg p-6 mb-8 fade-in">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-xl font-bold text-gray-800">Proje İlerlemesi</h3>
-                        <span class="text-3xl font-bold text-blue-600" id="progressPercent">0%</span>
-                    </div>
-                    <div class="progress-bar h-6">
-                        <div id="progressBar" class="progress-fill bg-gradient-to-r from-blue-500 to-purple-600" style="width: 0%"></div>
                     </div>
                 </div>
 
                 <!-- Stats Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
                     <div class="card p-6 bg-gradient-to-br from-blue-600 to-blue-800 text-white fade-in">
-                        <i class="fas fa-tasks text-4xl opacity-80 mb-4"></i>
-                        <p class="text-blue-200 text-sm mb-1">Toplam Görev</p>
-                        <h3 class="text-4xl font-bold mb-2" id="totalTasks">0</h3>
-                        <div class="flex items-center text-sm">
-                            <i class="fas fa-check mr-1"></i>
-                            <span id="completedTasks">0</span> Tamamlandı
-                        </div>
-                    </div>
-
-                    <div class="card p-6 bg-gradient-to-br from-purple-600 to-purple-800 text-white fade-in">
-                        <i class="fas fa-flag text-4xl opacity-80 mb-4"></i>
-                        <p class="text-purple-200 text-sm mb-1">Milestone</p>
-                        <h3 class="text-4xl font-bold mb-2" id="totalMilestones">0</h3>
-                        <div class="flex items-center text-sm">
-                            <i class="fas fa-check mr-1"></i>
-                            <span id="completedMilestones">0</span> Tamamlandı
-                        </div>
+                        <i class="fas fa-wallet text-4xl opacity-80 mb-4"></i>
+                        <p class="text-blue-200 text-sm mb-1">Bütçe</p>
+                        <h3 class="text-3xl font-bold mb-1">₺750K</h3>
+                        <p class="text-xs text-blue-200">Toplam</p>
                     </div>
 
                     <div class="card p-6 bg-gradient-to-br from-green-600 to-green-800 text-white fade-in">
-                        <i class="fas fa-dollar-sign text-4xl opacity-80 mb-4"></i>
+                        <i class="fas fa-check-circle text-4xl opacity-80 mb-4"></i>
                         <p class="text-green-200 text-sm mb-1">Harcanan</p>
-                        <h3 class="text-3xl font-bold mb-2" id="totalSpent">₺0</h3>
-                        <div class="flex items-center text-sm">
-                            <span id="spentPercent">0%</span> Kullanıldı
-                        </div>
+                        <h3 class="text-3xl font-bold mb-1">₺337K</h3>
+                        <p class="text-xs text-green-200">%45 Kullanım</p>
                     </div>
 
                     <div class="card p-6 bg-gradient-to-br from-orange-600 to-orange-800 text-white fade-in">
-                        <i class="fas fa-coins text-4xl opacity-80 mb-4"></i>
-                        <p class="text-orange-200 text-sm mb-1">Kalan Bütçe</p>
-                        <h3 class="text-3xl font-bold mb-2" id="remainingBudget">₺0</h3>
-                        <div class="flex items-center text-sm">
-                            <i class="fas fa-wallet mr-1"></i>
-                            Mevcut
-                        </div>
+                        <i class="fas fa-hand-holding-usd text-4xl opacity-80 mb-4"></i>
+                        <p class="text-orange-200 text-sm mb-1">Kalan</p>
+                        <h3 class="text-3xl font-bold mb-1">₺413K</h3>
+                        <p class="text-xs text-orange-200">%55 Bakiye</p>
+                    </div>
+
+                    <div class="card p-6 bg-gradient-to-br from-purple-600 to-purple-800 text-white fade-in">
+                        <i class="fas fa-tasks text-4xl opacity-80 mb-4"></i>
+                        <p class="text-purple-200 text-sm mb-1">Görevler</p>
+                        <h3 class="text-3xl font-bold mb-1">18/32</h3>
+                        <p class="text-xs text-purple-200">%56 Tamamlandı</p>
+                    </div>
+
+                    <div class="card p-6 bg-gradient-to-br from-pink-600 to-pink-800 text-white fade-in">
+                        <i class="fas fa-calendar-check text-4xl opacity-80 mb-4"></i>
+                        <p class="text-pink-200 text-sm mb-1">Milestone</p>
+                        <h3 class="text-3xl font-bold mb-1">2/5</h3>
+                        <p class="text-xs text-pink-200">Tamamlandı</p>
                     </div>
                 </div>
 
                 <!-- Tabs -->
                 <div class="flex space-x-2 mb-6">
-                    <button class="tab-button active px-6 py-3 rounded-lg font-semibold" onclick="showProjectTab('overview')">Genel Bakış</button>
-                    <button class="tab-button px-6 py-3 rounded-lg font-semibold text-gray-700 hover:bg-gray-100" onclick="showProjectTab('tasks')">Görevler</button>
-                    <button class="tab-button px-6 py-3 rounded-lg font-semibold text-gray-700 hover:bg-gray-100" onclick="showProjectTab('milestones')">Milestone'lar</button>
-                    <button class="tab-button px-6 py-3 rounded-lg font-semibold text-gray-700 hover:bg-gray-100" onclick="showProjectTab('timeline')">Zaman Çizelgesi</button>
+                    <button class="tab-button active px-6 py-3 rounded-lg font-semibold" onclick="showTab('genel')">Genel Bakış</button>
+                    <button class="tab-button px-6 py-3 rounded-lg font-semibold text-gray-700 hover:bg-gray-100" onclick="showTab('gorevler')">Görevler</button>
+                    <button class="tab-button px-6 py-3 rounded-lg font-semibold text-gray-700 hover:bg-gray-100" onclick="showTab('ekip')">Ekip</button>
+                    <button class="tab-button px-6 py-3 rounded-lg font-semibold text-gray-700 hover:bg-gray-100" onclick="showTab('butce')">Bütçe</button>
+                    <button class="tab-button px-6 py-3 rounded-lg font-semibold text-gray-700 hover:bg-gray-100" onclick="showTab('milestone')">Milestone</button>
+                    <button class="tab-button px-6 py-3 rounded-lg font-semibold text-gray-700 hover:bg-gray-100" onclick="showTab('riskler')">Riskler</button>
+                    <button class="tab-button px-6 py-3 rounded-lg font-semibold text-gray-700 hover:bg-gray-100" onclick="showTab('dosyalar')">Dosyalar</button>
                 </div>
 
-                <!-- Overview Tab -->
-                <div id="overview" class="tab-content active">
+                <!-- Genel Bakış Tab -->
+                <div id="genel" class="tab-content active">
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Project Info -->
                         <div class="card p-6">
                             <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
                                 <i class="fas fa-info-circle text-blue-600 mr-3"></i>
@@ -244,86 +370,719 @@
                             </h3>
                             <div class="space-y-4">
                                 <div class="flex items-center justify-between pb-4 border-b">
-                                    <span class="text-gray-600">Kategori</span>
-                                    <span class="font-semibold text-gray-800" id="overviewCategory">-</span>
+                                    <span class="text-gray-600">Proje Kodu</span>
+                                    <span class="font-semibold text-gray-800">PRJ-2025-012</span>
                                 </div>
                                 <div class="flex items-center justify-between pb-4 border-b">
-                                    <span class="text-gray-600">Bütçe</span>
-                                    <span class="font-semibold text-gray-800" id="overviewBudget">₺0</span>
+                                    <span class="text-gray-600">Kategori</span>
+                                    <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">Su & Altyapı</span>
                                 </div>
                                 <div class="flex items-center justify-between pb-4 border-b">
                                     <span class="text-gray-600">Başlangıç</span>
-                                    <span class="font-semibold text-gray-800" id="overviewStart">-</span>
+                                    <span class="font-semibold text-gray-800">01 Mayıs 2025</span>
                                 </div>
                                 <div class="flex items-center justify-between pb-4 border-b">
-                                    <span class="text-gray-600">Bitiş</span>
-                                    <span class="font-semibold text-gray-800" id="overviewEnd">-</span>
+                                    <span class="text-gray-600">Bitiş (Planlanan)</span>
+                                    <span class="font-semibold text-gray-800">30 Kasım 2025</span>
+                                </div>
+                                <div class="flex items-center justify-between pb-4 border-b">
+                                    <span class="text-gray-600">Tesis</span>
+                                    <span class="font-semibold text-gray-800">Sudan Tesisi</span>
+                                </div>
+                                <div class="flex items-center justify-between pb-4 border-b">
+                                    <span class="text-gray-600">Hedef Faydalanıcı</span>
+                                    <span class="font-semibold text-gray-800">5.000 Kişi</span>
                                 </div>
                                 <div class="flex items-center justify-between">
-                                    <span class="text-gray-600">Hedef Faydalanıcı</span>
-                                    <span class="font-semibold text-gray-800" id="overviewBeneficiaries">0</span>
+                                    <span class="text-gray-600">Proje Müdürü</span>
+                                    <div class="flex items-center">
+                                        <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold mr-2">
+                                            CY
+                                        </div>
+                                        <span class="font-semibold text-gray-800">Can Yıldız</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
+                        <!-- Timeline -->
                         <div class="card p-6">
                             <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
-                                <i class="fas fa-align-left text-purple-600 mr-3"></i>
-                                Proje Açıklaması
+                                <i class="fas fa-clock text-green-600 mr-3"></i>
+                                Son Aktiviteler
                             </h3>
-                            <p class="text-gray-600 leading-relaxed" id="overviewDescription">Yükleniyor...</p>
+                            <div class="timeline">
+                                <div class="timeline-item completed">
+                                    <div class="flex items-start justify-between">
+                                        <div>
+                                            <h4 class="font-semibold text-gray-800">Saha Araştırması Tamamlandı</h4>
+                                            <p class="text-sm text-gray-500">20 Ekim 2025</p>
+                                        </div>
+                                        <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-semibold">Tamamlandı</span>
+                                    </div>
+                                </div>
+                                <div class="timeline-item completed">
+                                    <div class="flex items-start justify-between">
+                                        <div>
+                                            <h4 class="font-semibold text-gray-800">İlk 10 Kuyu Kazıldı</h4>
+                                            <p class="text-sm text-gray-500">15 Ekim 2025</p>
+                                        </div>
+                                        <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-semibold">Tamamlandı</span>
+                                    </div>
+                                </div>
+                                <div class="timeline-item pending">
+                                    <div class="flex items-start justify-between">
+                                        <div>
+                                            <h4 class="font-semibold text-gray-800">Pompa Sistemleri Kurulumu</h4>
+                                            <p class="text-sm text-gray-500">Devam Ediyor</p>
+                                        </div>
+                                        <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-semibold">Devam Ediyor</span>
+                                    </div>
+                                </div>
+                                <div class="timeline-item">
+                                    <div class="flex items-start justify-between">
+                                        <div>
+                                            <h4 class="font-semibold text-gray-800">Su Kalite Testleri</h4>
+                                            <p class="text-sm text-gray-500">Planlanan</p>
+                                        </div>
+                                        <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs font-semibold">Planlanan</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
+                        <!-- Budget Chart -->
                         <div class="card p-6 lg:col-span-2">
                             <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
-                                <i class="fas fa-chart-pie text-green-600 mr-3"></i>
-                                Bütçe Dağılımı
+                                <i class="fas fa-chart-line text-purple-600 mr-3"></i>
+                                Bütçe Kullanım Trendi
                             </h3>
-                            <div class="mb-4">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-gray-600">Kullanılan Bütçe</span>
-                                    <span class="text-lg font-semibold text-blue-600" id="usedBudgetText">₺0</span>
-                                </div>
-                                <div class="progress-bar h-4">
-                                    <div id="budgetBar" class="progress-fill bg-gradient-to-r from-green-500 to-blue-600" style="width: 0%"></div>
-                                </div>
+                            <div style="position: relative; height: 300px;">
+                                <canvas id="budgetChart"></canvas>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Tasks Tab -->
-                <div id="tasks" class="tab-content">
+                <!-- Görevler Tab -->
+                <div id="gorevler" class="tab-content">
                     <div class="card p-6">
                         <div class="flex items-center justify-between mb-6">
-                            <h3 class="text-xl font-bold text-gray-800">Görev Listesi</h3>
+                            <h3 class="text-xl font-bold text-gray-800">Görev Listesi (32)</h3>
                             <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
                                 <i class="fas fa-plus mr-2"></i>Yeni Görev
                             </button>
                         </div>
 
-                        <div id="tasksList" class="space-y-4">
-                            <p class="text-gray-500 text-center py-8">Yükleniyor...</p>
+                        <div class="space-y-3">
+                            <!-- Task 1 -->
+                            <div class="task-item flex items-center p-4 border border-gray-200 rounded-lg">
+                                <input type="checkbox" checked class="task-checkbox w-5 h-5 text-blue-600 rounded mr-4">
+                                <label class="flex-1 cursor-pointer">
+                                    <p class="font-semibold text-gray-800">Saha araştırması ve jeolojik analiz</p>
+                                    <p class="text-sm text-gray-500">İlk aşama tamamlandı</p>
+                                </label>
+                                <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold mr-3">Tamamlandı</span>
+                                <div class="flex items-center text-sm text-gray-500">
+                                    <i class="fas fa-calendar mr-2"></i>
+                                    <span>15 Ekim</span>
+                                </div>
+                            </div>
+
+                            <!-- Task 2 -->
+                            <div class="task-item flex items-center p-4 border border-gray-200 rounded-lg">
+                                <input type="checkbox" checked class="task-checkbox w-5 h-5 text-blue-600 rounded mr-4">
+                                <label class="flex-1 cursor-pointer">
+                                    <p class="font-semibold text-gray-800">İlk 10 kuyu kazım işlemi</p>
+                                    <p class="text-sm text-gray-500">Kazı işlemleri tamamlandı</p>
+                                </label>
+                                <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold mr-3">Tamamlandı</span>
+                                <div class="flex items-center text-sm text-gray-500">
+                                    <i class="fas fa-calendar mr-2"></i>
+                                    <span>20 Ekim</span>
+                                </div>
+                            </div>
+
+                            <!-- Task 3 -->
+                            <div class="task-item flex items-center p-4 border border-gray-200 rounded-lg bg-yellow-50">
+                                <input type="checkbox" class="task-checkbox w-5 h-5 text-blue-600 rounded mr-4">
+                                <label class="flex-1 cursor-pointer">
+                                    <p class="font-semibold text-gray-800">Pompa sistemleri kurulumu</p>
+                                    <p class="text-sm text-gray-500">7/10 pompa kuruldu</p>
+                                </label>
+                                <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold mr-3">Devam Ediyor</span>
+                                <div class="flex items-center text-sm text-gray-500">
+                                    <i class="fas fa-calendar mr-2"></i>
+                                    <span>25 Ekim</span>
+                                </div>
+                            </div>
+
+                            <!-- Task 4 -->
+                            <div class="task-item flex items-center p-4 border border-gray-200 rounded-lg">
+                                <input type="checkbox" class="task-checkbox w-5 h-5 text-blue-600 rounded mr-4">
+                                <label class="flex-1 cursor-pointer">
+                                    <p class="font-semibold text-gray-800">Su kalite testleri</p>
+                                    <p class="text-sm text-gray-500">Test ekipmanları beklemede</p>
+                                </label>
+                                <span class="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-semibold mr-3">Bekliyor</span>
+                                <div class="flex items-center text-sm text-gray-500">
+                                    <i class="fas fa-calendar mr-2"></i>
+                                    <span>30 Ekim</span>
+                                </div>
+                            </div>
+
+                            <!-- Task 5 -->
+                            <div class="task-item flex items-center p-4 border border-gray-200 rounded-lg">
+                                <input type="checkbox" class="task-checkbox w-5 h-5 text-blue-600 rounded mr-4">
+                                <label class="flex-1 cursor-pointer">
+                                    <p class="font-semibold text-gray-800">Yerel topluluk eğitimleri</p>
+                                    <p class="text-sm text-gray-500">Eğitim materyalleri hazırlanıyor</p>
+                                </label>
+                                <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold mr-3">Planlanan</span>
+                                <div class="flex items-center text-sm text-gray-500">
+                                    <i class="fas fa-calendar mr-2"></i>
+                                    <span>15 Kas</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Gantt View -->
+                        <div class="mt-8">
+                            <h4 class="text-lg font-bold text-gray-800 mb-4">Zaman Çizelgesi</h4>
+                            <div class="space-y-3">
+                                <div>
+                                    <div class="flex items-center justify-between text-sm mb-2">
+                                        <span class="text-gray-600 w-48">Saha Araştırması</span>
+                                        <div class="flex-1 relative h-8">
+                                            <div class="gantt-bar bg-gradient-to-r from-green-500 to-green-600" style="width: 20%; margin-left: 0%;">
+                                                Tamamlandı
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex items-center justify-between text-sm mb-2">
+                                        <span class="text-gray-600 w-48">Kuyu Kazım</span>
+                                        <div class="flex-1 relative h-8">
+                                            <div class="gantt-bar bg-gradient-to-r from-green-500 to-green-600" style="width: 25%; margin-left: 20%;">
+                                                Tamamlandı
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex items-center justify-between text-sm mb-2">
+                                        <span class="text-gray-600 w-48">Pompa Kurulumu</span>
+                                        <div class="flex-1 relative h-8">
+                                            <div class="gantt-bar bg-gradient-to-r from-yellow-500 to-yellow-600" style="width: 20%; margin-left: 45%;">
+                                                %70
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex items-center justify-between text-sm mb-2">
+                                        <span class="text-gray-600 w-48">Kalite Testleri</span>
+                                        <div class="flex-1 relative h-8">
+                                            <div class="gantt-bar bg-gradient-to-r from-blue-500 to-blue-600" style="width: 15%; margin-left: 65%;">
+                                                Planlanan
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex items-center justify-between text-sm mb-2">
+                                        <span class="text-gray-600 w-48">Eğitim & Teslim</span>
+                                        <div class="flex-1 relative h-8">
+                                            <div class="gantt-bar bg-gradient-to-r from-purple-500 to-purple-600" style="width: 20%; margin-left: 80%;">
+                                                Planlanan
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Milestones Tab -->
-                <div id="milestones" class="tab-content">
-                    <div id="milestonesList" class="space-y-6">
-                        <p class="text-gray-500 text-center py-8">Yükleniyor...</p>
+                <!-- Ekip Tab -->
+                <div id="ekip" class="tab-content">
+                    <div class="card p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-xl font-bold text-gray-800">Proje Ekibi (12)</h3>
+                            <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                                <i class="fas fa-user-plus mr-2"></i>Ekip Üyesi Ekle
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <!-- Team Member 1 -->
+                            <div class="border border-gray-200 rounded-xl p-6 hover:shadow-lg transition">
+                                <div class="flex items-center mb-4">
+                                    <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-full flex items-center justify-center text-white text-xl font-bold">
+                                        CY
+                                    </div>
+                                    <div class="ml-4">
+                                        <h4 class="font-bold text-gray-800">Can Yıldız</h4>
+                                        <p class="text-sm text-gray-500">Proje Müdürü</p>
+                                    </div>
+                                </div>
+                                <div class="space-y-2 text-sm text-gray-600 mb-4">
+                                    <p><i class="fas fa-envelope mr-2 text-gray-400"></i>can@stk.org</p>
+                                    <p><i class="fas fa-phone mr-2 text-gray-400"></i>+90 555 123 4567</p>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">Müdür</span>
+                                    <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">Aktif</span>
+                                </div>
+                            </div>
+
+                            <!-- Team Member 2 -->
+                            <div class="border border-gray-200 rounded-xl p-6 hover:shadow-lg transition">
+                                <div class="flex items-center mb-4">
+                                    <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-teal-600 rounded-full flex items-center justify-center text-white text-xl font-bold">
+                                        EA
+                                    </div>
+                                    <div class="ml-4">
+                                        <h4 class="font-bold text-gray-800">Elif Arslan</h4>
+                                        <p class="text-sm text-gray-500">Teknik Koordinatör</p>
+                                    </div>
+                                </div>
+                                <div class="space-y-2 text-sm text-gray-600 mb-4">
+                                    <p><i class="fas fa-envelope mr-2 text-gray-400"></i>elif@stk.org</p>
+                                    <p><i class="fas fa-phone mr-2 text-gray-400"></i>+90 555 234 5678</p>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-semibold">Koordinatör</span>
+                                    <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">Aktif</span>
+                                </div>
+                            </div>
+
+                            <!-- Team Member 3 -->
+                            <div class="border border-gray-200 rounded-xl p-6 hover:shadow-lg transition">
+                                <div class="flex items-center mb-4">
+                                    <div class="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center text-white text-xl font-bold">
+                                        MD
+                                    </div>
+                                    <div class="ml-4">
+                                        <h4 class="font-bold text-gray-800">Mehmet Demir</h4>
+                                        <p class="text-sm text-gray-500">Saha Mühendisi</p>
+                                    </div>
+                                </div>
+                                <div class="space-y-2 text-sm text-gray-600 mb-4">
+                                    <p><i class="fas fa-envelope mr-2 text-gray-400"></i>mehmet@stk.org</p>
+                                    <p><i class="fas fa-phone mr-2 text-gray-400"></i>+90 555 345 6789</p>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-semibold">Mühendis</span>
+                                    <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">Aktif</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Timeline Tab -->
-                <div id="timeline" class="tab-content">
+                <!-- Bütçe Tab -->
+                <div id="butce" class="tab-content">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="card p-6">
+                            <h3 class="text-xl font-bold text-gray-800 mb-6">Bütçe Dağılımı</h3>
+                            <div style="position: relative; height: 300px;">
+                                <canvas id="budgetPieChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="card p-6">
+                            <h3 class="text-xl font-bold text-gray-800 mb-6">Harcama Detayları</h3>
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between pb-4 border-b">
+                                    <div class="flex items-center">
+                                        <div class="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
+                                        <span class="text-gray-600">Ekipman & Malzeme</span>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-bold text-gray-800">₺285.000</p>
+                                        <p class="text-xs text-gray-500">%38</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between pb-4 border-b">
+                                    <div class="flex items-center">
+                                        <div class="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
+                                        <span class="text-gray-600">İşçilik</span>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-bold text-gray-800">₺225.000</p>
+                                        <p class="text-xs text-gray-500">%30</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between pb-4 border-b">
+                                    <div class="flex items-center">
+                                        <div class="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
+                                        <span class="text-gray-600">Lojistik</span>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-bold text-gray-800">₺150.000</p>
+                                        <p class="text-xs text-gray-500">%20</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <div class="w-3 h-3 bg-orange-500 rounded-full mr-3"></div>
+                                        <span class="text-gray-600">Diğer</span>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-bold text-gray-800">₺90.000</p>
+                                        <p class="text-xs text-gray-500">%12</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-6 mt-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-6">Harcama Geçmişi</h3>
+                        <table class="w-full">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Tarih</th>
+                                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Açıklama</th>
+                                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Kategori</th>
+                                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Tutar</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-t hover:bg-gray-50">
+                                    <td class="px-6 py-4 text-gray-600">20.10.2025</td>
+                                    <td class="px-6 py-4 font-semibold text-gray-800">Pompa sistemleri alımı</td>
+                                    <td class="px-6 py-4"><span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">Ekipman</span></td>
+                                    <td class="px-6 py-4 font-bold text-gray-800">₺85.000</td>
+                                </tr>
+                                <tr class="border-t hover:bg-gray-50">
+                                    <td class="px-6 py-4 text-gray-600">15.10.2025</td>
+                                    <td class="px-6 py-4 font-semibold text-gray-800">Kazı ekibi ödemesi</td>
+                                    <td class="px-6 py-4"><span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">İşçilik</span></td>
+                                    <td class="px-6 py-4 font-bold text-gray-800">₺45.000</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Milestone Tab -->
+                <div id="milestone" class="tab-content">
+                    <div class="grid grid-cols-1 gap-6">
+                        <!-- Milestone 1 -->
+                        <div class="card p-6 border-l-4 border-green-500">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex-1">
+                                    <div class="flex items-center mb-2">
+                                        <i class="fas fa-check-circle text-green-500 text-2xl mr-3"></i>
+                                        <h3 class="text-xl font-bold text-gray-800">Faz 1: Saha Hazırlığı</h3>
+                                    </div>
+                                    <p class="text-gray-600 ml-11">Jeolojik araştırma ve konum belirleme tamamlandı</p>
+                                </div>
+                                <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">Tamamlandı</span>
+                            </div>
+                            <div class="ml-11 grid grid-cols-3 gap-4 text-sm">
+                                <div>
+                                    <p class="text-gray-500">Başlangıç</p>
+                                    <p class="font-semibold text-gray-800">01 Mayıs</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500">Bitiş</p>
+                                    <p class="font-semibold text-gray-800">31 Mayıs</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500">Süre</p>
+                                    <p class="font-semibold text-gray-800">30 Gün</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Milestone 2 -->
+                        <div class="card p-6 border-l-4 border-green-500">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex-1">
+                                    <div class="flex items-center mb-2">
+                                        <i class="fas fa-check-circle text-green-500 text-2xl mr-3"></i>
+                                        <h3 class="text-xl font-bold text-gray-800">Faz 2: Kuyu Kazımı</h3>
+                                    </div>
+                                    <p class="text-gray-600 ml-11">25 adet su kuyusu kazım işlemleri tamamlandı</p>
+                                </div>
+                                <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">Tamamlandı</span>
+                            </div>
+                            <div class="ml-11 grid grid-cols-3 gap-4 text-sm">
+                                <div>
+                                    <p class="text-gray-500">Başlangıç</p>
+                                    <p class="font-semibold text-gray-800">01 Haziran</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500">Bitiş</p>
+                                    <p class="font-semibold text-gray-800">15 Ekim</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500">Süre</p>
+                                    <p class="font-semibold text-gray-800">137 Gün</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Milestone 3 -->
+                        <div class="card p-6 border-l-4 border-yellow-500 bg-yellow-50">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex-1">
+                                    <div class="flex items-center mb-2">
+                                        <i class="fas fa-spinner fa-spin text-yellow-500 text-2xl mr-3"></i>
+                                        <h3 class="text-xl font-bold text-gray-800">Faz 3: Altyapı Kurulumu</h3>
+                                    </div>
+                                    <p class="text-gray-600 ml-11">Pompa ve boru sistemlerinin montajı devam ediyor</p>
+                                </div>
+                                <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-semibold">Devam Ediyor</span>
+                            </div>
+                            <div class="ml-11">
+                                <div class="mb-2">
+                                    <div class="flex items-center justify-between text-sm mb-1">
+                                        <span class="text-gray-600">İlerleme</span>
+                                        <span class="font-semibold text-yellow-600">70%</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill bg-gradient-to-r from-yellow-500 to-orange-500" style="width: 70%"></div>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-3 gap-4 text-sm mt-4">
+                                    <div>
+                                        <p class="text-gray-500">Başlangıç</p>
+                                        <p class="font-semibold text-gray-800">16 Ekim</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-500">Planlanan Bitiş</p>
+                                        <p class="font-semibold text-gray-800">15 Kasım</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-500">Kalan</p>
+                                        <p class="font-semibold text-gray-800">25 Gün</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Milestone 4 -->
+                        <div class="card p-6 border-l-4 border-gray-300">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex-1">
+                                    <div class="flex items-center mb-2">
+                                        <i class="fas fa-clock text-gray-400 text-2xl mr-3"></i>
+                                        <h3 class="text-xl font-bold text-gray-800">Faz 4: Test & Kalite Kontrol</h3>
+                                    </div>
+                                    <p class="text-gray-600 ml-11">Su kalitesi testleri ve sistem kontrolleri</p>
+                                </div>
+                                <span class="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm font-semibold">Planlanan</span>
+                            </div>
+                            <div class="ml-11 grid grid-cols-3 gap-4 text-sm">
+                                <div>
+                                    <p class="text-gray-500">Başlangıç</p>
+                                    <p class="font-semibold text-gray-800">16 Kasım</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500">Planlanan Bitiş</p>
+                                    <p class="font-semibold text-gray-800">25 Kasım</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500">Süre</p>
+                                    <p class="font-semibold text-gray-800">10 Gün</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Milestone 5 -->
+                        <div class="card p-6 border-l-4 border-gray-300">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex-1">
+                                    <div class="flex items-center mb-2">
+                                        <i class="fas fa-clock text-gray-400 text-2xl mr-3"></i>
+                                        <h3 class="text-xl font-bold text-gray-800">Faz 5: Eğitim & Teslim</h3>
+                                    </div>
+                                    <p class="text-gray-600 ml-11">Yerel topluluk eğitimi ve proje teslimi</p>
+                                </div>
+                                <span class="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm font-semibold">Planlanan</span>
+                            </div>
+                            <div class="ml-11 grid grid-cols-3 gap-4 text-sm">
+                                <div>
+                                    <p class="text-gray-500">Başlangıç</p>
+                                    <p class="font-semibold text-gray-800">26 Kasım</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500">Planlanan Bitiş</p>
+                                    <p class="font-semibold text-gray-800">30 Kasım</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500">Süre</p>
+                                    <p class="font-semibold text-gray-800">5 Gün</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Riskler Tab -->
+                <div id="riskler" class="tab-content">
                     <div class="card p-6">
-                        <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
-                            <i class="fas fa-chart-bar text-blue-600 mr-3"></i>
-                            Milestone İlerleme Durumu
-                        </h3>
-                        <div style="position: relative; height: 400px;">
-                            <canvas id="timelineChart"></canvas>
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-xl font-bold text-gray-800">Risk Değerlendirmesi</h3>
+                            <button class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>Yeni Risk Ekle
+                            </button>
+                        </div>
+
+                        <div class="space-y-4">
+                            <!-- Risk 1 -->
+                            <div class="border border-red-300 bg-red-50 rounded-lg p-6">
+                                <div class="flex items-start justify-between mb-4">
+                                    <div class="flex-1">
+                                        <div class="flex items-center mb-2">
+                                            <span class="px-3 py-1 bg-red-500 text-white rounded-full text-xs font-semibold mr-3">Yüksek</span>
+                                            <h4 class="text-lg font-bold text-gray-800">Mevsimsel Yağışlar</h4>
+                                        </div>
+                                        <p class="text-gray-600 mb-3">Yağmur mevsiminde saha çalışmaları aksayabilir</p>
+                                        <div class="flex items-center space-x-6 text-sm">
+                                            <span class="text-gray-600"><i class="fas fa-layer-group mr-2"></i>Etki: Yüksek</span>
+                                            <span class="text-gray-600"><i class="fas fa-percentage mr-2"></i>Olasılık: %70</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-white rounded-lg p-4">
+                                    <p class="text-sm font-semibold text-gray-700 mb-2">Önlem Planı:</p>
+                                    <p class="text-sm text-gray-600">Yağmur sezonuna hazırlık için ekipman ve malzeme stoklanacak. Alternatif çalışma planları hazırlandı.</p>
+                                </div>
+                            </div>
+
+                            <!-- Risk 2 -->
+                            <div class="border border-yellow-300 bg-yellow-50 rounded-lg p-6">
+                                <div class="flex items-start justify-between mb-4">
+                                    <div class="flex-1">
+                                        <div class="flex items-center mb-2">
+                                            <span class="px-3 py-1 bg-yellow-500 text-white rounded-full text-xs font-semibold mr-3">Orta</span>
+                                            <h4 class="text-lg font-bold text-gray-800">Ekipman Tedarik Gecikmeleri</h4>
+                                        </div>
+                                        <p class="text-gray-600 mb-3">İthal ekipmanların gümrük süreçleri uzayabilir</p>
+                                        <div class="flex items-center space-x-6 text-sm">
+                                            <span class="text-gray-600"><i class="fas fa-layer-group mr-2"></i>Etki: Orta</span>
+                                            <span class="text-gray-600"><i class="fas fa-percentage mr-2"></i>Olasılık: %40</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-white rounded-lg p-4">
+                                    <p class="text-sm font-semibold text-gray-700 mb-2">Önlem Planı:</p>
+                                    <p class="text-sm text-gray-600">Alternatif tedarikçilerle görüşüldü. Yerel ekipman seçenekleri araştırılıyor.</p>
+                                </div>
+                            </div>
+
+                            <!-- Risk 3 -->
+                            <div class="border border-green-300 bg-green-50 rounded-lg p-6">
+                                <div class="flex items-start justify-between mb-4">
+                                    <div class="flex-1">
+                                        <div class="flex items-center mb-2">
+                                            <span class="px-3 py-1 bg-green-500 text-white rounded-full text-xs font-semibold mr-3">Düşük</span>
+                                            <h4 class="text-lg font-bold text-gray-800">Personel Sağlığı</h4>
+                                        </div>
+                                        <p class="text-gray-600 mb-3">Saha çalışanlarında sağlık sorunları oluşabilir</p>
+                                        <div class="flex items-center space-x-6 text-sm">
+                                            <span class="text-gray-600"><i class="fas fa-layer-group mr-2"></i>Etki: Orta</span>
+                                            <span class="text-gray-600"><i class="fas fa-percentage mr-2"></i>Olasılık: %20</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-white rounded-lg p-4">
+                                    <p class="text-sm font-semibold text-gray-700 mb-2">Önlem Planı:</p>
+                                    <p class="text-sm text-gray-600">Tüm personele aşı ve sağlık taraması yapıldı. Saha sağlık ekibi görevlendirildi.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dosyalar Tab -->
+                <div id="dosyalar" class="tab-content">
+                    <div class="card p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-xl font-bold text-gray-800">Proje Dökümanları</h3>
+                            <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                                <i class="fas fa-upload mr-2"></i>Dosya Yükle
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <!-- Document 1 -->
+                            <div class="border border-gray-200 rounded-xl p-6 hover:shadow-lg transition cursor-pointer">
+                                <div class="w-full h-32 bg-gradient-to-br from-red-100 to-orange-100 rounded-lg mb-4 flex items-center justify-center">
+                                    <i class="fas fa-file-pdf text-6xl text-red-400"></i>
+                                </div>
+                                <h4 class="font-bold text-gray-800 mb-1">Proje Teklifi</h4>
+                                <p class="text-sm text-gray-500 mb-3">PDF • 2.5 MB</p>
+                                <button class="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition text-sm">
+                                    <i class="fas fa-download mr-2"></i>İndir
+                                </button>
+                            </div>
+
+                            <!-- Document 2 -->
+                            <div class="border border-gray-200 rounded-xl p-6 hover:shadow-lg transition cursor-pointer">
+                                <div class="w-full h-32 bg-gradient-to-br from-blue-100 to-cyan-100 rounded-lg mb-4 flex items-center justify-center">
+                                    <i class="fas fa-file-word text-6xl text-blue-400"></i>
+                                </div>
+                                <h4 class="font-bold text-gray-800 mb-1">Teknik Rapor</h4>
+                                <p class="text-sm text-gray-500 mb-3">DOCX • 1.8 MB</p>
+                                <button class="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition text-sm">
+                                    <i class="fas fa-download mr-2"></i>İndir
+                                </button>
+                            </div>
+
+                            <!-- Document 3 -->
+                            <div class="border border-gray-200 rounded-xl p-6 hover:shadow-lg transition cursor-pointer">
+                                <div class="w-full h-32 bg-gradient-to-br from-green-100 to-teal-100 rounded-lg mb-4 flex items-center justify-center">
+                                    <i class="fas fa-file-excel text-6xl text-green-400"></i>
+                                </div>
+                                <h4 class="font-bold text-gray-800 mb-1">Bütçe Tablosu</h4>
+                                <p class="text-sm text-gray-500 mb-3">XLSX • 856 KB</p>
+                                <button class="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition text-sm">
+                                    <i class="fas fa-download mr-2"></i>İndir
+                                </button>
+                            </div>
+
+                            <!-- Document 4 -->
+                            <div class="border border-gray-200 rounded-xl p-6 hover:shadow-lg transition cursor-pointer">
+                                <div class="w-full h-32 bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg mb-4 flex items-center justify-center">
+                                    <i class="fas fa-image text-6xl text-purple-400"></i>
+                                </div>
+                                <h4 class="font-bold text-gray-800 mb-1">Saha Fotoğrafları</h4>
+                                <p class="text-sm text-gray-500 mb-3">ZIP • 45 MB</p>
+                                <button class="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition text-sm">
+                                    <i class="fas fa-download mr-2"></i>İndir
+                                </button>
+                            </div>
+
+                            <!-- Document 5 -->
+                            <div class="border border-gray-200 rounded-xl p-6 hover:shadow-lg transition cursor-pointer">
+                                <div class="w-full h-32 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-lg mb-4 flex items-center justify-center">
+                                    <i class="fas fa-file-powerpoint text-6xl text-yellow-400"></i>
+                                </div>
+                                <h4 class="font-bold text-gray-800 mb-1">Proje Sunumu</h4>
+                                <p class="text-sm text-gray-500 mb-3">PPTX • 12 MB</p>
+                                <button class="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition text-sm">
+                                    <i class="fas fa-download mr-2"></i>İndir
+                                </button>
+                            </div>
+
+                            <!-- Document 6 -->
+                            <div class="border border-gray-200 rounded-xl p-6 hover:shadow-lg transition cursor-pointer">
+                                <div class="w-full h-32 bg-gradient-to-br from-indigo-100 to-blue-100 rounded-lg mb-4 flex items-center justify-center">
+                                    <i class="fas fa-file-alt text-6xl text-indigo-400"></i>
+                                </div>
+                                <h4 class="font-bold text-gray-800 mb-1">İlerleme Raporu</h4>
+                                <p class="text-sm text-gray-500 mb-3">PDF • 3.2 MB</p>
+                                <button class="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition text-sm">
+                                    <i class="fas fa-download mr-2"></i>İndir
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -331,48 +1090,159 @@
         </div>
     </div>
 
+    <script>
+        // Tab Navigation
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.getElementById(tabName).classList.add('active');
+            
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+                btn.classList.add('text-gray-700', 'hover:bg-gray-100');
+                btn.classList.remove('text-white');
+            });
+            
+            event.currentTarget.classList.add('active');
+            event.currentTarget.classList.remove('text-gray-700', 'hover:bg-gray-100');
+            event.currentTarget.classList.add('text-white');
+
+            // Initialize charts when switching to budget tab
+            if (tabName === 'butce') {
+                setTimeout(initBudgetCharts, 100);
+            }
+        }
+
+        // Initialize Charts
+        window.addEventListener('load', function() {
+            initBudgetChart();
+        });
+
+        function initBudgetChart() {
+            const budgetCtx = document.getElementById('budgetChart');
+            if (budgetCtx && !budgetCtx.chart) {
+                budgetCtx.chart = new Chart(budgetCtx.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: ['May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki'],
+                        datasets: [{
+                            label: 'Harcama',
+                            data: [50000, 125000, 180000, 245000, 290000, 337000],
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }, {
+                            label: 'Planlanan',
+                            data: [60000, 130000, 200000, 280000, 360000, 450000],
+                            borderColor: '#f5576c',
+                            backgroundColor: 'rgba(245, 87, 108, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            borderDash: [5, 5]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'bottom'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return '₺' + (value / 1000) + 'K';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function initBudgetCharts() {
+            const pieCtx = document.getElementById('budgetPieChart');
+            if (pieCtx && !pieCtx.chart) {
+                pieCtx.chart = new Chart(pieCtx.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Ekipman', 'İşçilik', 'Lojistik', 'Diğer'],
+                        datasets: [{
+                            data: [285000, 225000, 150000, 90000],
+                            backgroundColor: [
+                                '#667eea',
+                                '#43e97b',
+                                '#764ba2',
+                                '#fa709a'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            }
+        }
+    <!-- Supabase & Custom Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./js/config.js"></script>
     <script src="./js/project-detail.js"></script>
+    
     <script>
-        // Toast function
-        function showToast(message, type = 'info') {
-            const colors = {
-                success: 'bg-green-500',
-                error: 'bg-red-500',
-                info: 'bg-blue-500'
-            };
-
-            const toast = document.createElement('div');
-            toast.className = `fixed top-4 right-4 ${colors[type]} text-white px-6 py-4 rounded-lg shadow-xl z-50`;
-            toast.innerHTML = `<i class="fas fa-check-circle mr-2"></i>${message}`;
-            
-            document.body.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.remove();
-            }, 3000);
-        }
-
-        // Rapor export
-        function exportProjectReport() {
-            showToast('Rapor hazırlanıyor...', 'info');
-        }
-
         // Sayfa yüklendiğinde
         document.addEventListener('DOMContentLoaded', async () => {
             const urlParams = new URLSearchParams(window.location.search);
             const projectId = urlParams.get('id');
 
             if (!projectId) {
-                showToast('Proje bulunamadı!', 'error');
-                setTimeout(() => {
-                    window.location.href = 'dashboard.html';
-                }, 2000);
+                alert('Proje bulunamadı!');
+                window.location.href = 'dashboard.html';
                 return;
             }
 
-            await window.ProjectDetailModule.loadProjectDetail(projectId);
+            // Proje detaylarını yükle
+            if (window.ProjectDetailModule) {
+                await window.ProjectDetailModule.loadProjectDetail(projectId);
+            }
+        });
+
+        // Menu item'lara tıklama eventi
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', function() {
+                if (this.textContent.includes('Dashboard')) {
+                    window.location.href = 'dashboard.html';
+                } else if (this.textContent.includes('Finans')) {
+                    window.location.href = 'dashboard.html#finans';
+                } else if (this.textContent.includes('Tesisler')) {
+                    window.location.href = 'dashboard.html#tesisler';
+                } else if (this.textContent.includes('Projeler')) {
+                    window.location.href = 'dashboard.html#projeler';
+                } else if (this.textContent.includes('Kurban')) {
+                    window.location.href = 'dashboard.html#kurban';
+                } else if (this.textContent.includes('Personel')) {
+                    window.location.href = 'dashboard.html#personel';
+                } else if (this.textContent.includes('Ayarlar')) {
+                    window.location.href = 'dashboard.html#ayarlar';
+                }
+            });
         });
     </script>
+</body>
+</html>
 </body>
 </html>
