@@ -29,7 +29,7 @@ async function initDashboard() {
         if (window.ThemeModule) {
             window.ThemeModule.initTheme();
         }
-        
+
         // Dili başlat
         if (window.i18n) {
             window.i18n.initLanguage();
@@ -228,11 +228,11 @@ async function loadProjects() {
                     <div class="bg-gradient-to-r from-${getProjectColor(p.status)}-500 to-${getProjectColor(p.status)}-700 h-2 rounded-full transition-all duration-500" style="width: ${p.progress}%"></div>
                 </div>
             </div>
-            <div class="flex items-center justify-between text-sm text-gray-600">
+            <div class="flex items-center justify-between text-sm text-gray-600 mb-4">
                 <span><i class="fas fa-calendar mr-1"></i>${formatDate(p.start_date)}</span>
                 <span><i class="fas fa-wallet mr-1"></i>${formatCurrency(p.budget)}</span>
             </div>
-            <button onclick="viewProjectDetail('${p.id}')" class="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm">
+            <button onclick="viewProjectDetail('${p.id}')" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm">
                 <i class="fas fa-eye mr-2"></i>Detay Gör
             </button>
         </div>
@@ -323,16 +323,6 @@ function setupEventListeners() {
         window.location.href = 'login.html';
     });
 
-    // Mobile menu toggle
-    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-    const sidebar = document.querySelector('.sidebar');
-    
-    if (mobileMenuBtn && sidebar) {
-        mobileMenuBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('hidden');
-        });
-    }
-
     // Form submit'leri
     setupFormHandlers();
     
@@ -342,11 +332,8 @@ function setupEventListeners() {
     // Bildirimleri yükle
     loadNotifications();
     
-    // Profil sayfası event'leri
-    setupProfileHandlers();
-    
-    // Kullanıcılar sayfası event'leri
-    setupUsersHandlers();
+    // Ayarlar event'leri
+    setupAyarlarHandlers();
 }
 
 // Sayfa navigasyonu
@@ -362,16 +349,15 @@ function navigateToPage(page) {
     if (pageContent) pageContent.classList.add('active');
 
     // Başlık güncelle
-       const titles = {
+    const titles = {
         'dashboard': ['Dashboard', 'Genel Bakış'],
         'finans': ['Finans', 'Gelir ve Gider Yönetimi'],
         'tesisler': ['Tesisler', 'Tesis Yönetimi'],
         'projeler': ['Projeler', 'Proje Takip Sistemi'],
         'kurban': ['Kurban', 'Kurban Yönetimi'],
         'personel': ['Personel', 'Personel Yönetimi'],
-        'profil': ['Profil', 'Hesap Ayarları'],
-        'kullanicilar': ['Kullanıcılar', 'Kullanıcı Yönetimi'],
-        'formbuilder': ['Form Builder', 'Sistem Formlarını Özelleştir']
+        'formbuilder': ['Form Builder', 'Sistem Formlarını Özelleştir'],
+        'ayarlar': ['Ayarlar', 'Sistem Ayarları']
     };
     
     if (titles[page]) {
@@ -380,10 +366,10 @@ function navigateToPage(page) {
     }
     
     // Sayfa özel yüklemeleri
-    if (page === 'profil') {
-        loadProfilePage();
-    } else if (page === 'kullanicilar') {
-        loadUsersPage();
+    if (page === 'ayarlar') {
+        setTimeout(() => {
+            loadAyarlarData();
+        }, 100);
     }
 }
 
@@ -472,7 +458,7 @@ function setupFormHandlers() {
                 donorName: inputs[0].value,
                 donorPhone: inputs[1].value,
                 amount: inputs[2].value,
-                sacrificeType: inputs[3].value.toLowerCase().includes('tek') ? 'single' : 'shared',
+                sacrificeType: inputs[3].value,
                 animalType: 'sheep',
                 sacrificeDate: new Date().toISOString().split('T')[0],
                 paymentStatus: 'paid'
@@ -485,6 +471,32 @@ function setupFormHandlers() {
                 await loadAllData();
             } else {
                 showToast('Hata oluştu: ' + (result.error?.message || 'Bilinmeyen hata'), 'error');
+            }
+        });
+    }
+
+    // Yeni kullanıcı formu
+    const newUserForm = document.getElementById('newUserForm');
+    if (newUserForm) {
+        newUserForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const inputs = newUserForm.querySelectorAll('input, select');
+            
+            const result = await window.ProfileModule.addNewUser({
+                fullName: inputs[0].value,
+                email: inputs[1].value,
+                phone: inputs[2].value,
+                password: inputs[3].value,
+                role: inputs[4].value
+            });
+
+            if (result.success) {
+                showToast('Kullanıcı başarıyla eklendi!', 'success');
+                closeModal('newUserModal');
+                newUserForm.reset();
+                loadAyarlarUsersData();
+            } else {
+                showToast('Kullanıcı eklenemedi: ' + (result.error.message || 'Bilinmeyen hata'), 'error');
             }
         });
     }
@@ -506,7 +518,6 @@ window.closeModal = (modalId) => {
         modal.classList.remove('flex');
     }
 };
-
 // Toast bildirimi
 function showToast(message, type = 'info') {
     const colors = {
@@ -601,6 +612,26 @@ function getSacrificeStatusText(status) {
     return texts[status] || status;
 }
 
+function getRoleTextForTable(role) {
+    const roles = {
+        'admin': 'Yönetici',
+        'finance_manager': 'Mali Müdür',
+        'project_manager': 'Proje Müdürü',
+        'user': 'Kullanıcı'
+    };
+    return roles[role] || 'Kullanıcı';
+}
+
+// Tesis detayını göster
+window.viewFacilityDetail = function(facilityId) {
+    window.location.href = `facility-detail.html?id=${facilityId}`;
+};
+
+// Proje detayını göster
+window.viewProjectDetail = function(projectId) {
+    window.location.href = `project-detail.html?id=${projectId}`;
+};
+
 // ==================== FİLTRELEME VE RAPORLAMA ====================
 
 let currentFilters = {};
@@ -665,7 +696,7 @@ async function loadFilteredTransactions() {
                         <tr class="border-b border-gray-100 hover:bg-gray-50 transition">
                             <td class="py-3 px-4 text-sm text-gray-600">${formatDate(t.transaction_date)}</td>
                             <td class="py-3 px-4 text-sm font-semibold text-gray-800">${t.title}</td>
-                            <td class="py-3 px-4 text-sm text-gray-600">${getCategoryText(t.category)}</td>
+                            <td class="py-3 px-4 text-sm text-gray-600">${t.category}</td>
                             <td class="py-3 px-4">
                                 <span class="px-2 py-1 ${t.type === 'income' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} rounded text-xs font-semibold">
                                     ${t.type === 'income' ? 'Gelir' : 'Gider'}
@@ -735,29 +766,6 @@ window.exportPDF = async function() {
         console.error('PDF oluşturma hatası:', error);
         showToast('PDF oluşturulurken hata oluştu', 'error');
     }
-};
-
-// Kategori metinleri
-function getCategoryText(category) {
-    const texts = {
-        'donation': 'Bağış',
-        'bağış': 'Bağış',
-        'sacrifice': 'Kurban',
-        'kurban': 'Kurban',
-        'project': 'Proje',
-        'proje': 'Proje',
-        'facility': 'Tesis',
-        'tesis': 'Tesis',
-        'salary': 'Maaş',
-        'personel': 'Personel',
-        'other': 'Diğer'
-    };
-    return texts[category.toLowerCase()] || category;
-}
-
-// Tesis detayını göster
-window.viewFacilityDetail = function(facilityId) {
-    window.location.href = `facility-detail.html?id=${facilityId}`;
 };
 
 // ==================== BİLDİRİM SİSTEMİ ====================
@@ -1030,7 +1038,7 @@ document.addEventListener('keydown', (e) => {
         closeAllModals();
     }
 
-    // Sayı tuşları: Hızlı sayfa geçişi
+    // Alt tuşları: Hızlı sayfa geçişi
     if (e.altKey) {
         const pages = ['dashboard', 'finans', 'tesisler', 'projeler', 'kurban', 'personel'];
         const keyNum = parseInt(e.key);
@@ -1043,7 +1051,7 @@ document.addEventListener('keydown', (e) => {
 
 // Tüm modal'ları kapat
 function closeAllModals() {
-    ['incomeModal', 'expenseModal', 'projectModal', 'sacrificeModal', 'notificationModal', 'newUserModal'].forEach(modalId => {
+    ['incomeModal', 'expenseModal', 'projectModal', 'sacrificeModal', 'notificationModal', 'newUserModal', 'templatesModal', 'previewModal', 'exportModal'].forEach(modalId => {
         const modal = document.getElementById(modalId);
         if (modal && !modal.classList.contains('hidden')) {
             closeModal(modalId);
@@ -1051,127 +1059,106 @@ function closeAllModals() {
     });
     closeNotifications();
 }
+// ==================== AYARLAR YÖNETİMİ ====================
 
-// ==================== PROFİL YÖNETİMİ ====================
-
-// Profil event handler'ları
-function setupProfileHandlers() {
-    // Profil formu
-    const profileForm = document.getElementById('profileForm');
-    if (profileForm) {
-        profileForm.addEventListener('submit', async (e) => {
+// Ayarlar event handler'larını kur
+function setupAyarlarHandlers() {
+    // Profil formu (Ayarlar)
+    const ayarlarProfilForm = document.getElementById('ayarlarProfilForm');
+    if (ayarlarProfilForm) {
+        ayarlarProfilForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const result = await window.ProfileModule.updateProfile({
-                fullName: document.getElementById('profileFullName').value,
-                phone: document.getElementById('profilePhone').value
+                fullName: document.getElementById('ayarlarFullName').value,
+                phone: document.getElementById('ayarlarPhone').value
             });
 
             if (result.success) {
                 showToast('Profil başarıyla güncellendi!', 'success');
-                document.getElementById('profileNameDisplay').textContent = document.getElementById('profileFullName').value;
-                document.getElementById('profilePhoneDisplay').textContent = document.getElementById('profilePhone').value;
+                await loadAyarlarData();
             } else {
-                showToast('Profil güncellenemedi: ' + result.error.message, 'error');
-            }
-        });
-    }
-
-    // Şifre değiştirme formu
-    const passwordForm = document.getElementById('passwordForm');
-    if (passwordForm) {
-        passwordForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const newPass = document.getElementById('newPassword').value;
-            const confirmPass = document.getElementById('confirmPassword').value;
-
-            if (newPass !== confirmPass) {
-                showToast('Şifreler eşleşmiyor!', 'error');
-                return;
-            }
-
-            if (newPass.length < 6) {
-                showToast('Şifre en az 6 karakter olmalı!', 'error');
-                return;
-            }
-
-            const result = await window.ProfileModule.changePassword(newPass);
-
-            if (result.success) {
-                showToast('Şifre başarıyla değiştirildi!', 'success');
-                passwordForm.reset();
-            } else {
-                showToast('Şifre değiştirilemedi: ' + result.error.message, 'error');
-            }
-        });
-    }
-
-    // Avatar yükleme
-    const avatarUpload = document.getElementById('avatarUpload');
-    if (avatarUpload) {
-        avatarUpload.addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            if (file.size > 2 * 1024 * 1024) {
-                showToast('Dosya boyutu 2MB\'dan küçük olmalı!', 'error');
-                return;
-            }
-
-            showToast('Avatar yükleniyor...', 'info');
-
-            const result = await window.ProfileModule.uploadAvatar(file);
-
-            if (result.success) {
-                showToast('Avatar başarıyla güncellendi!', 'success');
-            } else {
-                showToast('Avatar yüklenemedi!', 'error');
+                showToast('Profil güncellenemedi!', 'error');
             }
         });
     }
 }
 
-// Profil sayfası yüklendiğinde
-async function loadProfilePage() {
-    await window.ProfileModule.loadProfile();
-}
+// Ayarlar verilerini yükle
+async function loadAyarlarData() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
 
-// ==================== KULLANICI YÖNETİMİ ====================
+    const { data: userData } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', session.user.email)
+        .single();
 
-// Kullanıcılar event handler'ları
-function setupUsersHandlers() {
-    // Yeni kullanıcı formu
-    const newUserForm = document.getElementById('newUserForm');
-    if (newUserForm) {
-        newUserForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const inputs = newUserForm.querySelectorAll('input, select');
-            
-            const result = await window.ProfileModule.addNewUser({
-                fullName: inputs[0].value,
-                email: inputs[1].value,
-                phone: inputs[2].value,
-                password: inputs[3].value,
-                role: inputs[4].value
-            });
+    if (userData) {
+        const initials = userData.full_name.split(' ').map(n => n[0]).join('').toUpperCase();
+        
+        // Profil tab verileri
+        if (document.getElementById('ayarlarAvatar')) {
+            document.getElementById('ayarlarAvatar').textContent = initials;
+        }
+        if (document.getElementById('ayarlarUserName')) {
+            document.getElementById('ayarlarUserName').textContent = userData.full_name;
+        }
+        if (document.getElementById('ayarlarUserEmail')) {
+            document.getElementById('ayarlarUserEmail').textContent = userData.email;
+        }
+        if (document.getElementById('ayarlarFullName')) {
+            document.getElementById('ayarlarFullName').value = userData.full_name;
+        }
+        if (document.getElementById('ayarlarPhone')) {
+            document.getElementById('ayarlarPhone').value = userData.phone || '';
+        }
+    }
 
-            if (result.success) {
-                showToast('Kullanıcı başarıyla eklendi!', 'success');
-                closeModal('newUserModal');
-                newUserForm.reset();
-                await loadUsersPage();
-            } else {
-                showToast('Kullanıcı eklenemedi: ' + (result.error.message || 'Bilinmeyen hata'), 'error');
-            }
-        });
+    // İlk yüklemede profil tab'ını göster
+    const firstTab = document.querySelector('.ayarlar-tab-btn');
+    if (firstTab && !document.querySelector('.ayarlar-tab-btn.active')) {
+        firstTab.click();
     }
 }
 
-// Kullanıcı listesini yükle
-async function loadUsersPage() {
+// Ayarlar tab değiştirme
+window.showAyarlarTab = function(tabId) {
+    // Tüm tab içeriklerini gizle
+    document.querySelectorAll('.ayarlar-tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    
+    // Seçili tab'ı göster
+    const selectedContent = document.getElementById(tabId);
+    if (selectedContent) {
+        selectedContent.classList.add('active');
+    }
+    
+    // Tab butonlarını güncelle
+    document.querySelectorAll('.ayarlar-tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+        btn.classList.add('text-gray-700');
+        btn.classList.remove('text-white');
+    });
+    
+    if (event && event.currentTarget) {
+        event.currentTarget.classList.add('active');
+        event.currentTarget.classList.remove('text-gray-700');
+        event.currentTarget.classList.add('text-white');
+    }
+    
+    // Tab'a özel veri yükleme
+    if (tabId === 'kullanici-ayarlar') {
+        loadAyarlarUsersData();
+    }
+};
+
+// Kullanıcılar verilerini yükle (Ayarlar)
+async function loadAyarlarUsersData() {
     const users = await window.ProfileModule.getUsersList();
-    const container = document.getElementById('usersList');
+    const container = document.getElementById('ayarlarUsersList');
     
     if (!container) return;
     
@@ -1214,17 +1201,6 @@ async function loadUsersPage() {
     `;
 }
 
-// Rol metni
-function getRoleTextForTable(role) {
-    const roles = {
-        'admin': 'Yönetici',
-        'finance_manager': 'Mali Müdür',
-        'project_manager': 'Proje Müdürü',
-        'user': 'Kullanıcı'
-    };
-    return roles[role] || 'Kullanıcı';
-}
-
 // Kullanıcı silme onayı
 window.deleteUserConfirm = function(userId) {
     if (confirm('Bu kullanıcıyı silmek istediğinizden emin misiniz?')) {
@@ -1238,13 +1214,8 @@ async function deleteUserAction(userId) {
     
     if (result.success) {
         showToast('Kullanıcı başarıyla silindi!', 'success');
-        await loadUsersPage();
+        await loadAyarlarUsersData();
     } else {
         showToast('Kullanıcı silinemedi!', 'error');
     }
 }
-
-// Proje detayını göster
-window.viewProjectDetail = function(projectId) {
-    window.location.href = `project-detail.html?id=${projectId}`;
-};

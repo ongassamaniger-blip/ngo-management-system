@@ -3,100 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - NGO System</title>
+    <title>Dashboard - NGO Management System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+        }
+
         .sidebar {
             background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-            transition: all 0.3s ease;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
         }
+
         .menu-item {
             transition: all 0.3s ease;
             cursor: pointer;
         }
+
         .menu-item:hover {
             background: rgba(255, 255, 255, 0.1);
             transform: translateX(5px);
         }
+
         .menu-item.active {
             background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
             border-left: 4px solid #fff;
         }
-        .stat-card {
-            transition: all 0.3s ease;
+
+        .page-content {
+            display: none;
         }
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+
+        .page-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
         }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .fade-in {
+
+        .card {
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .animate-fade-in {
             animation: fadeIn 0.5s ease;
         }
-        .page-content {
-            display: none;
-        }
-        .page-content.active {
-            display: block;
-        }
-        /* Loading Overlay */
-        #loadingOverlay {
+
+        .loading-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(5px);
+            inset: 0;
+            background: rgba(255, 255, 255, 0.95);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 9999;
-            opacity: 1;
-            transition: opacity 0.3s ease;
         }
-        
-        #loadingOverlay.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-        
-        .loader {
-            width: 50px;
-            height: 50px;
-            border: 5px solid rgba(255, 255, 255, 0.3);
-            border-top-color: #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        /* Toast animasyonu */
-        @keyframes slideInRight {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-        
-        .animate-fade-in {
-            animation: slideInRight 0.3s ease;
-        }
-        
+
         /* DARK MODE */
         .dark {
             color-scheme: dark;
@@ -153,7 +134,7 @@
         .dark .shadow-md {
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5) !important;
         }
-        
+
         /* FORM BUILDER */
         .form-element {
             cursor: move;
@@ -219,14 +200,34 @@
             transform: translateY(-5px);
             box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
         }
+
+        /* AYARLAR */
+        .ayarlar-tab-btn {
+            transition: all 0.3s ease;
+            color: #6b7280;
+        }
+
+        .ayarlar-tab-btn.active {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .ayarlar-tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .ayarlar-tab-content.active {
+            display: block;
+        }
     </style>
 </head>
-<body class="bg-gray-50">
+<body>
     <!-- Loading Overlay -->
-    <div id="loadingOverlay">
+    <div id="loadingOverlay" class="loading-overlay hidden">
         <div class="text-center">
-            <div class="loader mx-auto mb-4"></div>
-            <p class="text-white text-lg font-semibold">Yükleniyor...</p>
+            <div class="w-16 h-16 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p class="text-lg font-semibold text-gray-700">Yükleniyor...</p>
         </div>
     </div>
 
@@ -269,23 +270,22 @@
                         <i class="fas fa-users w-6"></i>
                         <span class="ml-3">Personel</span>
                     </div>
-                    <div class="menu-item px-4 py-3 rounded-lg text-white" data-page="profil">
-                        <i class="fas fa-user-circle w-6"></i>
-                        <span class="ml-3">Profil</span>
-                    </div>
-                    <div class="menu-item px-4 py-3 rounded-lg text-white" data-page="kullanicilar">
-                        <i class="fas fa-user-cog w-6"></i>
-                        <span class="ml-3">Kullanıcılar</span>
-                    </div>
+                    
+                    <div class="my-4 border-t border-gray-600"></div>
+                    
                     <div class="menu-item px-4 py-3 rounded-lg text-white" data-page="formbuilder">
                         <i class="fas fa-magic w-6"></i>
                         <span class="ml-3">Form Builder</span>
                     </div>
+                    <div class="menu-item px-4 py-3 rounded-lg text-white" data-page="ayarlar">
+                        <i class="fas fa-cog w-6"></i>
+                        <span class="ml-3">Ayarlar</span>
+                    </div>
                 </nav>
 
                 <div class="absolute bottom-6 left-6 right-6">
-                    <button id="logoutBtn" class="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition">
-                        <i class="fas fa-sign-out-alt mr-2"></i>Çıkış
+                    <button id="logoutBtn" class="w-full px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Çıkış Yap
                     </button>
                 </div>
             </div>
@@ -296,695 +296,509 @@
             <!-- Header -->
             <header class="bg-white shadow-sm sticky top-0 z-40">
                 <div class="flex items-center justify-between px-8 py-4">
-                    <!-- Mobile Menu Button -->
-                    <button id="mobileMenuBtn" class="lg:hidden text-gray-600 hover:text-purple-600">
-                        <i class="fas fa-bars text-2xl"></i>
-                    </button>
-                    
                     <div>
-                        <h2 class="text-2xl font-bold text-gray-800" id="pageTitle">Dashboard</h2>
-                        <p class="text-sm text-gray-500" id="pageSubtitle">Genel Bakış</p>
+                        <h2 id="pageTitle" class="text-2xl font-bold text-gray-800">Dashboard</h2>
+                        <p id="pageSubtitle" class="text-sm text-gray-500">Genel Bakış</p>
                     </div>
-                    <div class="flex items-center space-x-4">
-                        <!-- Arama -->
-                        <div class="relative hidden md:block">
-                            <input type="text" 
-                                   id="globalSearch" 
-                                   placeholder="İşlem, tesis, proje ara..." 
-                                   class="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none text-sm">
+
+                    <div class="flex items-center space-x-6">
+                        <div class="relative">
+                            <input type="text" id="globalSearch" placeholder="Ara... (Ctrl+K)" class="px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 w-64">
                             <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
                         </div>
-                        
-                        <!-- Bildirimler -->
+
                         <button onclick="toggleNotifications()" class="relative text-gray-600 hover:text-purple-600 transition">
                             <i class="fas fa-bell text-xl"></i>
                             <span id="notificationBadge" class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-white text-xs flex items-center justify-center hidden">0</span>
                         </button>
-                                              
-                        <!-- Dark Mode Toggle -->
+                        
                         <button id="themeToggle" onclick="ThemeModule.toggleTheme()" class="text-gray-600 hover:text-purple-600 transition">
                             <i class="fas fa-moon text-xl"></i>
-                        </button>                          
-                        <!-- Language Toggle -->
+                        </button>
+                        
                         <button id="languageToggle" onclick="i18n.showLanguageMenu()" class="text-gray-600 hover:text-purple-600 transition">
                             <span class="text-xl">🇹🇷</span>
                         </button>
-                        <div class="w-10 h-10 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center text-white font-bold cursor-pointer hover:shadow-lg transition">
-                            <span id="userInitials">--</span>
-                        </div>
-                        <div class="hidden md:block">
-                            <p class="text-sm font-semibold text-gray-800" id="userName">Yükleniyor...</p>
-                            <p class="text-xs text-gray-500" id="userRole">--</p>
+
+                        <div class="flex items-center space-x-3">
+                            <div class="text-right">
+                                <p id="userName" class="font-semibold text-gray-800">Loading...</p>
+                                <p id="userRole" class="text-xs text-gray-500">User</p>
+                            </div>
+                            <div id="userInitials" class="w-10 h-10 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center text-white font-bold">
+                                -
+                            </div>
                         </div>
                     </div>
                 </div>
             </header>
+            <!-- Content Area -->
+            <div class="p-8">
+                <!-- Dashboard Page -->
+                <div id="dashboard-page" class="page-content active">
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                        <div class="bg-gradient-to-br from-green-500 to-green-700 rounded-2xl shadow-lg p-6 text-white animate-fade-in">
+                            <div class="flex items-center justify-between mb-4">
+                                <i class="fas fa-arrow-down text-4xl opacity-80"></i>
+                                <span class="text-xs font-semibold bg-white bg-opacity-20 px-3 py-1 rounded-full">Bu Ay</span>
+                            </div>
+                            <h3 class="text-3xl font-bold mb-2" id="totalIncome">₺0</h3>
+                            <p class="text-green-100">Toplam Gelir</p>
+                        </div>
 
-            <!-- Dashboard Page -->
-            <div id="dashboard-page" class="page-content active p-8">
-                <!-- Hoş Geldin Mesajı -->
-                <div class="bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl p-8 text-white mb-8">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <h2 class="text-3xl font-bold mb-2">Hoş Geldiniz! 👋</h2>
-                            <p class="text-lg opacity-90 mb-4">NGO Yönetim Sistemi'ne hoş geldiniz. Hızlı işlemler için aşağıdaki butonları kullanabilirsiniz.</p>
-                            <div class="flex space-x-3">
-                                <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm">
-                                    <i class="fas fa-check-circle mr-1"></i>Gerçek zamanlı veriler
-                                </span>
-                                <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm">
-                                    <i class="fas fa-shield-alt mr-1"></i>Güvenli
-                                </span>
-                                <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm">
-                                    <i class="fas fa-cloud mr-1"></i>Bulut tabanlı
-                                </span>
+                        <div class="bg-gradient-to-br from-red-500 to-red-700 rounded-2xl shadow-lg p-6 text-white animate-fade-in">
+                            <div class="flex items-center justify-between mb-4">
+                                <i class="fas fa-arrow-up text-4xl opacity-80"></i>
+                                <span class="text-xs font-semibold bg-white bg-opacity-20 px-3 py-1 rounded-full">Bu Ay</span>
+                            </div>
+                            <h3 class="text-3xl font-bold mb-2" id="totalExpense">₺0</h3>
+                            <p class="text-red-100">Toplam Gider</p>
+                        </div>
+
+                        <div class="bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl shadow-lg p-6 text-white animate-fade-in">
+                            <div class="flex items-center justify-between mb-4">
+                                <i class="fas fa-wallet text-4xl opacity-80"></i>
+                                <span class="text-xs font-semibold bg-white bg-opacity-20 px-3 py-1 rounded-full">Mevcut</span>
+                            </div>
+                            <h3 class="text-3xl font-bold mb-2" id="balance">₺0</h3>
+                            <p class="text-blue-100">Bakiye</p>
+                        </div>
+
+                        <div class="bg-gradient-to-br from-purple-500 to-purple-700 rounded-2xl shadow-lg p-6 text-white animate-fade-in">
+                            <div class="flex items-center justify-between mb-4">
+                                <i class="fas fa-building text-4xl opacity-80"></i>
+                                <span class="text-xs font-semibold bg-white bg-opacity-20 px-3 py-1 rounded-full">Aktif</span>
+                            </div>
+                            <h3 class="text-3xl font-bold mb-2" id="totalFacilities">0</h3>
+                            <p class="text-purple-100">Tesisler</p>
+                        </div>
+                    </div>
+
+                    <!-- Grafikler -->
+                    <div class="grid grid-cols-2 gap-6 mb-8">
+                        <div class="bg-white rounded-2xl shadow-lg p-6">
+                            <h3 class="text-xl font-bold text-gray-800 mb-4">
+                                <i class="fas fa-chart-line mr-2 text-purple-600"></i>Gelir/Gider Trendi
+                            </h3>
+                            <div style="height: 250px;">
+                                <canvas id="incomeExpenseChart"></canvas>
                             </div>
                         </div>
-                        <div class="hidden md:block">
-                            <i class="fas fa-chart-line text-8xl opacity-20"></i>
+
+                        <div class="bg-white rounded-2xl shadow-lg p-6">
+                            <h3 class="text-xl font-bold text-gray-800 mb-4">
+                                <i class="fas fa-chart-pie mr-2 text-blue-600"></i>Kategori Dağılımı
+                            </h3>
+                            <div style="height: 250px;">
+                                <canvas id="categoryChart"></canvas>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Stats Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                    <div class="stat-card bg-gradient-to-br from-green-500 to-green-700 rounded-2xl p-6 text-white fade-in">
-                        <i class="fas fa-arrow-down text-4xl opacity-80 mb-4"></i>
-                        <p class="text-white text-opacity-80 text-sm mb-1">Toplam Gelir</p>
-                        <h3 class="text-3xl font-bold" id="totalIncome">₺0</h3>
-                        <p class="text-sm mt-2 opacity-80">Bu Ay</p>
-                    </div>
-
-                    <div class="stat-card bg-gradient-to-br from-red-500 to-red-700 rounded-2xl p-6 text-white fade-in">
-                        <i class="fas fa-arrow-up text-4xl opacity-80 mb-4"></i>
-                        <p class="text-white text-opacity-80 text-sm mb-1">Toplam Gider</p>
-                        <h3 class="text-3xl font-bold" id="totalExpense">₺0</h3>
-                        <p class="text-sm mt-2 opacity-80">Bu Ay</p>
-                    </div>
-
-                    <div class="stat-card bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl p-6 text-white fade-in">
-                        <i class="fas fa-wallet text-4xl opacity-80 mb-4"></i>
-                        <p class="text-white text-opacity-80 text-sm mb-1">Bakiye</p>
-                        <h3 class="text-3xl font-bold" id="balance">₺0</h3>
-                        <p class="text-sm mt-2 opacity-80">Net</p>
-                    </div>
-
-                    <div class="stat-card bg-gradient-to-br from-purple-500 to-purple-700 rounded-2xl p-6 text-white fade-in">
-                        <i class="fas fa-building text-4xl opacity-80 mb-4"></i>
-                        <p class="text-white text-opacity-80 text-sm mb-1">Tesisler</p>
-                        <h3 class="text-3xl font-bold" id="totalFacilities">0</h3>
-                        <p class="text-sm mt-2 opacity-80">Aktif</p>
-                    </div>
-                </div>
-
-                <!-- Quick Actions -->
-                <div class="grid grid-cols-4 gap-4 mb-8">
-                    <button onclick="openModal('incomeModal')" class="bg-white hover:bg-green-50 rounded-xl p-6 shadow-md hover:shadow-xl transition text-center">
-                        <i class="fas fa-plus-circle text-green-600 text-3xl mb-2"></i>
-                        <p class="font-semibold text-gray-800">Yeni Gelir</p>
-                    </button>
-                    <button onclick="openModal('expenseModal')" class="bg-white hover:bg-red-50 rounded-xl p-6 shadow-md hover:shadow-xl transition text-center">
-                        <i class="fas fa-minus-circle text-red-600 text-3xl mb-2"></i>
-                        <p class="font-semibold text-gray-800">Yeni Gider</p>
-                    </button>
-                    <button onclick="openModal('projectModal')" class="bg-white hover:bg-blue-50 rounded-xl p-6 shadow-md hover:shadow-xl transition text-center">
-                        <i class="fas fa-project-diagram text-blue-600 text-3xl mb-2"></i>
-                        <p class="font-semibold text-gray-800">Yeni Proje</p>
-                    </button>
-                    <button onclick="openModal('sacrificeModal')" class="bg-white hover:bg-orange-50 rounded-xl p-6 shadow-md hover:shadow-xl transition text-center">
-                        <i class="fas fa-mosque text-orange-600 text-3xl mb-2"></i>
-                        <p class="font-semibold text-gray-800">Kurban Kayıt</p>
-                    </button>
-                </div>
-                <!-- Grafikler -->
-                <div class="grid grid-cols-2 gap-6 mb-8">
-                    <!-- Gelir/Gider Grafik -->
+                    <!-- Recent Transactions -->
                     <div class="bg-white rounded-2xl shadow-lg p-6">
-                        <h3 class="text-xl font-bold text-gray-800 mb-4">
-                            <i class="fas fa-chart-line mr-2 text-purple-600"></i>Gelir/Gider Trendi
-                        </h3>
-                        <div style="height: 250px;">
-                            <canvas id="incomeExpenseChart"></canvas>
-                        </div>
-                    </div>
-
-                    <!-- Kategori Dağılımı -->
-                    <div class="bg-white rounded-2xl shadow-lg p-6">
-                        <h3 class="text-xl font-bold text-gray-800 mb-4">
-                            <i class="fas fa-chart-pie mr-2 text-blue-600"></i>Kategori Dağılımı
-                        </h3>
-                        <div style="height: 250px;">
-                            <canvas id="categoryChart"></canvas>
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">Son İşlemler</h3>
+                        <div id="recentTransactions">
+                            <p class="text-gray-500 text-center py-4">Yükleniyor...</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Recent Transactions -->
-                <div class="bg-white rounded-2xl shadow-lg p-6">
-                    <h3 class="text-xl font-bold text-gray-800 mb-4">Son İşlemler</h3>
-                    <div id="recentTransactions" class="space-y-3">
-                        <p class="text-gray-500 text-center py-4">Yükleniyor...</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Finans Page -->
-            <div id="finans-page" class="page-content p-8">
-                <!-- Filtreler -->
-                <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4">
-                        <i class="fas fa-filter mr-2"></i>Filtreler
-                    </h3>
-                    <div class="grid grid-cols-4 gap-4">
-                        <select id="filterType" class="px-4 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none">
-                            <option value="">Tüm İşlemler</option>
-                            <option value="income">Gelir</option>
-                            <option value="expense">Gider</option>
-                        </select>
-                        
-                        <select id="filterStatus" class="px-4 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none">
-                            <option value="">Tüm Durumlar</option>
-                            <option value="pending">Bekliyor</option>
-                            <option value="approved">Onaylandı</option>
-                            <option value="paid">Ödendi</option>
-                        </select>
-                        
-                        <input type="date" id="filterStartDate" class="px-4 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none" placeholder="Başlangıç">
-                        
-                        <input type="date" id="filterEndDate" class="px-4 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none" placeholder="Bitiş">
-                    </div>
-                    
-                    <div class="flex space-x-3 mt-4">
-                        <button onclick="applyFilters()" class="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
-                            <i class="fas fa-search mr-2"></i>Filtrele
-                        </button>
-                        <button onclick="clearFilters()" class="px-6 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition">
-                            <i class="fas fa-times mr-2"></i>Temizle
-                        </button>
-                        <button onclick="exportReport()" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition ml-auto">
-                            <i class="fas fa-file-excel mr-2"></i>Excel İndir
-                        </button>
-                        <button onclick="exportPDF()" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
-                            <i class="fas fa-file-pdf mr-2"></i>PDF İndir
-                        </button>
-                    </div>
-                </div>
-
-                <!-- İstatistik Kartları -->
-                <div class="grid grid-cols-3 gap-6 mb-6">
-                    <div class="bg-white rounded-xl shadow-lg p-6">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-gray-500 text-sm mb-1">Toplam Gelir</p>
-                                <h3 class="text-2xl font-bold text-green-600" id="financeIncome">₺0</h3>
-                                <p class="text-xs text-gray-400 mt-1"><span id="incomeCount">0</span> işlem</p>
-                            </div>
-                            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                                <i class="fas fa-arrow-down text-green-600 text-xl"></i>
-                            </div>
+                <!-- Finans Page -->
+                <div id="finans-page" class="page-content p-8">
+                    <div class="grid grid-cols-4 gap-6 mb-8">
+                        <div class="bg-white rounded-2xl shadow-lg p-6">
+                            <h4 class="text-sm text-gray-500 mb-2">Toplam Gelir</h4>
+                            <p class="text-2xl font-bold text-green-600" id="financeIncome">₺0</p>
+                            <p class="text-xs text-gray-500 mt-1"><span id="incomeCount">0</span> işlem</p>
                         </div>
-                    </div>
-
-                    <div class="bg-white rounded-xl shadow-lg p-6">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-gray-500 text-sm mb-1">Toplam Gider</p>
-                                <h3 class="text-2xl font-bold text-red-600" id="financeExpense">₺0</h3>
-                                <p class="text-xs text-gray-400 mt-1"><span id="expenseCount">0</span> işlem</p>
-                            </div>
-                            <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                                <i class="fas fa-arrow-up text-red-600 text-xl"></i>
-                            </div>
+                        <div class="bg-white rounded-2xl shadow-lg p-6">
+                            <h4 class="text-sm text-gray-500 mb-2">Toplam Gider</h4>
+                            <p class="text-2xl font-bold text-red-600" id="financeExpense">₺0</p>
+                            <p class="text-xs text-gray-500 mt-1"><span id="expenseCount">0</span> işlem</p>
                         </div>
-                    </div>
-
-                    <div class="bg-white rounded-xl shadow-lg p-6">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-gray-500 text-sm mb-1">Net Bakiye</p>
-                                <h3 class="text-2xl font-bold text-blue-600" id="financeBalance">₺0</h3>
-                                <p class="text-xs text-gray-400 mt-1">Güncel durum</p>
-                            </div>
-                            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                                <i class="fas fa-wallet text-blue-600 text-xl"></i>
-                            </div>
+                        <div class="bg-white rounded-2xl shadow-lg p-6">
+                            <h4 class="text-sm text-gray-500 mb-2">Net Bakiye</h4>
+                            <p class="text-2xl font-bold text-blue-600" id="financeBalance">₺0</p>
                         </div>
-                    </div>
-                </div>
-
-                <!-- İşlem Tablosu -->
-                <div class="bg-white rounded-2xl shadow-lg p-6">
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-xl font-bold text-gray-800">Tüm İşlemler</h3>
-                        <div class="flex space-x-2">
-                            <button onclick="openModal('incomeModal')" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-                                <i class="fas fa-plus mr-2"></i>Gelir
+                        <div class="bg-white rounded-2xl shadow-lg p-6">
+                            <button onclick="openModal('incomeModal')" class="w-full mb-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                                <i class="fas fa-plus mr-2"></i>Gelir Ekle
                             </button>
-                            <button onclick="openModal('expenseModal')" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
-                                <i class="fas fa-minus mr-2"></i>Gider
+                            <button onclick="openModal('expenseModal')" class="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                                <i class="fas fa-minus mr-2"></i>Gider Ekle
                             </button>
                         </div>
                     </div>
-                    <div id="allTransactions">
-                        <p class="text-gray-500 text-center py-4">Yükleniyor...</p>
+
+                    <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xl font-bold text-gray-800">Filtreler</h3>
+                            <div class="flex space-x-2">
+                                <button onclick="applyFilters()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                                    <i class="fas fa-filter mr-2"></i>Filtrele
+                                </button>
+                                <button onclick="clearFilters()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">
+                                    <i class="fas fa-times mr-2"></i>Temizle
+                                </button>
+                                <button onclick="exportReport()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                                    <i class="fas fa-file-excel mr-2"></i>Excel
+                                </button>
+                                <button onclick="exportPDF()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                                    <i class="fas fa-file-pdf mr-2"></i>PDF
+                                </button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-4 gap-4">
+                            <select id="filterType" class="px-4 py-2 border rounded-lg">
+                                <option value="">Tüm Türler</option>
+                                <option value="income">Gelir</option>
+                                <option value="expense">Gider</option>
+                            </select>
+                            <select id="filterStatus" class="px-4 py-2 border rounded-lg">
+                                <option value="">Tüm Durumlar</option>
+                                <option value="pending">Beklemede</option>
+                                <option value="approved">Onaylandı</option>
+                                <option value="paid">Ödendi</option>
+                            </select>
+                            <input type="date" id="filterStartDate" class="px-4 py-2 border rounded-lg">
+                            <input type="date" id="filterEndDate" class="px-4 py-2 border rounded-lg">
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">Tüm İşlemler</h3>
+                        <div id="allTransactions">
+                            <p class="text-gray-500 text-center py-4">Yükleniyor...</p>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <!-- Tesisler Page -->
-            <div id="tesisler-page" class="page-content p-8">
-                <div class="grid grid-cols-3 gap-6" id="facilitiesList">
-                    <p class="text-gray-500 col-span-3 text-center py-4">Yükleniyor...</p>
-                </div>
-            </div>
 
-            <!-- Projeler Page -->
-            <div id="projeler-page" class="page-content p-8">
-                <div class="bg-white rounded-2xl shadow-lg p-6">
-                    <h3 class="text-xl font-bold text-gray-800 mb-4">Aktif Projeler</h3>
-                    <div id="projectsList">
-                        <p class="text-gray-500 text-center py-4">Yükleniyor...</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Kurban Page -->
-            <div id="kurban-page" class="page-content p-8">
-                <div class="bg-white rounded-2xl shadow-lg p-6">
+                <!-- Tesisler Page -->
+                <div id="tesisler-page" class="page-content p-8">
                     <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-xl font-bold text-gray-800">Kurban Kayıtları</h3>
-                        <button onclick="openModal('sacrificeModal')" class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700">
-                            <i class="fas fa-plus mr-2"></i>Yeni Kayıt
+                        <h3 class="text-2xl font-bold text-gray-800">Tesis Listesi</h3>
+                        <button class="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:shadow-xl transition">
+                            <i class="fas fa-plus mr-2"></i>Yeni Tesis
+                        </button>
+                    </div>
+                    <div id="facilitiesList" class="grid grid-cols-3 gap-6">
+                        <p class="text-gray-500 col-span-3 text-center py-8">Yükleniyor...</p>
+                    </div>
+                </div>
+
+                <!-- Projeler Page -->
+                <div id="projeler-page" class="page-content p-8">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-2xl font-bold text-gray-800">Proje Listesi</h3>
+                        <button onclick="openModal('projectModal')" class="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:shadow-xl transition">
+                            <i class="fas fa-plus mr-2"></i>Yeni Proje
+                        </button>
+                    </div>
+                    <div id="projectsList">
+                        <p class="text-gray-500 text-center py-8">Yükleniyor...</p>
+                    </div>
+                </div>
+
+                <!-- Kurban Page -->
+                <div id="kurban-page" class="page-content p-8">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-2xl font-bold text-gray-800">Kurban Kayıtları</h3>
+                        <button onclick="openModal('sacrificeModal')" class="px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-xl hover:shadow-xl transition">
+                            <i class="fas fa-plus mr-2"></i>Yeni Kurban
                         </button>
                     </div>
                     <div id="sacrificesList">
-                        <p class="text-gray-500 text-center py-4">Yükleniyor...</p>
+                        <p class="text-gray-500 text-center py-8">Yükleniyor...</p>
                     </div>
                 </div>
-            </div>
 
-            <!-- Personel Page -->
-            <div id="personel-page" class="page-content p-8">
-                <div class="bg-white rounded-2xl shadow-lg p-6">
-                    <h3 class="text-xl font-bold text-gray-800 mb-4">Personel Listesi</h3>
-                    <div id="personnelList">
-                        <p class="text-gray-500 text-center py-4">Yükleniyor...</p>
-                    </div>
-                </div>
-            </div>
-            <!-- Profil Page -->
-            <div id="profil-page" class="page-content p-8">
-                <div class="grid grid-cols-3 gap-6">
-                    <!-- Sol: Profil Kartı -->
+                <!-- Personel Page -->
+                <div id="personel-page" class="page-content p-8">
                     <div class="bg-white rounded-2xl shadow-lg p-6">
-                        <div class="text-center mb-6">
-                            <div class="relative inline-block">
-                                <img id="avatarPreview" src="https://ui-avatars.com/api/?name=User&size=128&background=667eea&color=fff" 
-                                     class="w-32 h-32 rounded-full mx-auto mb-4 border-4 border-purple-200">
-                                <label for="avatarUpload" class="absolute bottom-2 right-2 w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-purple-700 transition">
-                                    <i class="fas fa-camera text-white"></i>
-                                </label>
-                                <input type="file" id="avatarUpload" class="hidden" accept="image/*">
-                            </div>
-                            <h3 class="text-xl font-bold text-gray-800" id="profileNameDisplay">Kullanıcı</h3>
-                            <p class="text-sm text-gray-500" id="profileRoleDisplay">Rol</p>
-                        </div>
-                        
-                        <div class="space-y-3 text-sm">
-                            <div class="flex items-center text-gray-600">
-                                <i class="fas fa-envelope w-6 text-purple-600"></i>
-                                <span id="profileEmailDisplay">email@example.com</span>
-                            </div>
-                            <div class="flex items-center text-gray-600">
-                                <i class="fas fa-phone w-6 text-purple-600"></i>
-                                <span id="profilePhoneDisplay">+90 XXX XXX XX XX</span>
-                            </div>
-                            <div class="flex items-center text-gray-600">
-                                <i class="fas fa-calendar w-6 text-purple-600"></i>
-                                <span>Kayıt: Ocak 2025</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Orta: Profil Düzenleme -->
-                    <div class="bg-white rounded-2xl shadow-lg p-6">
-                        <h3 class="text-xl font-bold text-gray-800 mb-6">
-                            <i class="fas fa-user-edit mr-2 text-purple-600"></i>Profil Bilgileri
-                        </h3>
-                        <form id="profileForm" class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Ad Soyad</label>
-                                <input type="text" id="profileFullName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none" required>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">E-posta</label>
-                                <input type="email" id="profileEmail" class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100" disabled>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Telefon</label>
-                                <input type="tel" id="profilePhone" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Rol</label>
-                                <input type="text" id="profileRole" class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100" disabled>
-                            </div>
-                            <button type="submit" class="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 transition font-semibold">
-                                <i class="fas fa-save mr-2"></i>Profili Güncelle
-                            </button>
-                        </form>
-                    </div>
-
-                    <!-- Sağ: Şifre Değiştirme -->
-                    <div class="bg-white rounded-2xl shadow-lg p-6">
-                        <h3 class="text-xl font-bold text-gray-800 mb-6">
-                            <i class="fas fa-lock mr-2 text-red-600"></i>Şifre Değiştir
-                        </h3>
-                        <form id="passwordForm" class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Yeni Şifre</label>
-                                <input type="password" id="newPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none" required minlength="6">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Şifre Tekrar</label>
-                                <input type="password" id="confirmPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none" required minlength="6">
-                            </div>
-                            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                                <p class="text-xs text-yellow-800">
-                                    <i class="fas fa-info-circle mr-1"></i>
-                                    Şifre en az 6 karakter olmalıdır.
-                                </p>
-                            </div>
-                            <button type="submit" class="w-full bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition font-semibold">
-                                <i class="fas fa-key mr-2"></i>Şifreyi Değiştir
-                            </button>
-                        </form>
-
-                        <!-- Güvenlik İpuçları -->
-                        <div class="mt-6 bg-blue-50 rounded-lg p-4">
-                            <h4 class="text-sm font-bold text-blue-800 mb-2">
-                                <i class="fas fa-shield-alt mr-1"></i>Güvenlik İpuçları
-                            </h4>
-                            <ul class="text-xs text-blue-700 space-y-1">
-                                <li>✓ Güçlü bir şifre kullanın</li>
-                                <li>✓ Başkalarıyla paylaşmayın</li>
-                                <li>✓ Düzenli olarak değiştirin</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Kullanıcılar Page (Admin) -->
-            <div id="kullanicilar-page" class="page-content p-8">
-                <div class="bg-white rounded-2xl shadow-lg p-6">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-xl font-bold text-gray-800">
-                            <i class="fas fa-users-cog mr-2 text-purple-600"></i>Kullanıcı Yönetimi
-                        </h3>
-                        <button onclick="openModal('newUserModal')" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
-                            <i class="fas fa-user-plus mr-2"></i>Yeni Kullanıcı
-                        </button>
-                    </div>
-                    
-                    <div id="usersList" class="overflow-x-auto">
-                        <p class="text-gray-500 text-center py-4">Yükleniyor...</p>
-                    </div>
-                </div>
-            <!-- Form Builder Page -->
-            <div id="formbuilder-page" class="page-content p-8">
-                <!-- Form Selection -->
-                <div class="bg-white rounded-2xl shadow-lg p-6 mb-8 fade-in">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <h3 class="text-xl font-bold text-gray-800 mb-2">
-                                <i class="fas fa-magic text-purple-600 mr-2"></i>
-                                Form Builder - Sistem Formlarını Özelleştir
-                            </h3>
-                            <p class="text-sm text-gray-500">Sistemdeki tüm formları buradan görsel olarak düzenleyebilirsiniz</p>
-                        </div>
-                        <div class="flex items-center space-x-4">
-                            <select id="formSelector" onchange="loadFormTemplate()" class="px-6 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 font-semibold">
-                                <option value="">Yeni Form</option>
-                                <option value="gelir">Gelir Formu</option>
-                                <option value="gider">Gider Formu</option>
-                                <option value="kurban">Kurban Kayıt Formu</option>
-                                <option value="personel">Personel Formu</option>
-                                <option value="proje">Proje Formu</option>
-                                <option value="tesis">Tesis Formu</option>
-                            </select>
-                            <button onclick="createNewForm()" class="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold hover:shadow-xl transition">
-                                <i class="fas fa-plus mr-2"></i>Yeni Form
-                            </button>
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">Personel Listesi</h3>
+                        <div id="personnelList">
+                            <p class="text-gray-500 text-center py-4">Yükleniyor...</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Form Builder Grid -->
-                <div class="grid grid-cols-12 gap-6">
-                    <!-- Left Sidebar - Form Elements -->
-                    <div class="col-span-3">
-                        <div class="bg-white rounded-2xl shadow-lg p-6 sticky top-24">
-                            <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center">
-                                <i class="fas fa-puzzle-piece text-purple-600 mr-2"></i>
-                                Form Elemanları
-                            </h3>
+                <!-- Form Builder Page -->
+                <div id="formbuilder-page" class="page-content p-8">
+                    <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-800 mb-2">
+                                    <i class="fas fa-magic text-purple-600 mr-2"></i>
+                                    Form Builder
+                                </h3>
+                                <p class="text-sm text-gray-500">Sistem formlarını görsel olarak düzenleyin</p>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <select id="formSelector" onchange="loadFormTemplate()" class="px-6 py-3 border border-gray-300 rounded-xl">
+                                    <option value="">Yeni Form</option>
+                                    <option value="gelir">Gelir Formu</option>
+                                    <option value="gider">Gider Formu</option>
+                                    <option value="kurban">Kurban Formu</option>
+                                    <option value="personel">Personel Formu</option>
+                                    <option value="proje">Proje Formu</option>
+                                    <option value="tesis">Tesis Formu</option>
+                                </select>
+                                <button onclick="createNewForm()" class="px-6 py-3 bg-purple-600 text-white rounded-xl">
+                                    <i class="fas fa-plus mr-2"></i>Yeni
+                                </button>
+                            </div>
+                        </div>
+                    </div>
 
-                            <!-- Basic Fields -->
-                            <div class="mb-6">
-                                <p class="text-xs font-semibold text-gray-500 mb-3 uppercase">Temel Alanlar</p>
+                    <div class="grid grid-cols-12 gap-6">
+                        <div class="col-span-3">
+                            <div class="bg-white rounded-2xl shadow-lg p-6 sticky top-24">
+                                <h3 class="text-lg font-bold text-gray-800 mb-6">Form Elemanları</h3>
                                 <div class="space-y-2">
-                                    <div class="form-element bg-gradient-to-r from-blue-50 to-blue-100 p-3 rounded-lg border border-blue-200" draggable="true" ondragstart="drag(event)" data-type="text">
+                                    <div class="form-element bg-blue-50 p-3 rounded-lg border" draggable="true" ondragstart="drag(event)" data-type="text">
                                         <i class="fas fa-font text-blue-600 mr-2"></i>
-                                        <span class="text-sm font-semibold text-gray-700">Metin</span>
+                                        <span class="text-sm font-semibold">Metin</span>
                                     </div>
-                                    <div class="form-element bg-gradient-to-r from-green-50 to-green-100 p-3 rounded-lg border border-green-200" draggable="true" ondragstart="drag(event)" data-type="number">
+                                    <div class="form-element bg-green-50 p-3 rounded-lg border" draggable="true" ondragstart="drag(event)" data-type="number">
                                         <i class="fas fa-hashtag text-green-600 mr-2"></i>
-                                        <span class="text-sm font-semibold text-gray-700">Sayı</span>
+                                        <span class="text-sm font-semibold">Sayı</span>
                                     </div>
-                                    <div class="form-element bg-gradient-to-r from-purple-50 to-purple-100 p-3 rounded-lg border border-purple-200" draggable="true" ondragstart="drag(event)" data-type="email">
+                                    <div class="form-element bg-purple-50 p-3 rounded-lg border" draggable="true" ondragstart="drag(event)" data-type="email">
                                         <i class="fas fa-envelope text-purple-600 mr-2"></i>
-                                        <span class="text-sm font-semibold text-gray-700">E-posta</span>
+                                        <span class="text-sm font-semibold">E-posta</span>
                                     </div>
-                                    <div class="form-element bg-gradient-to-r from-orange-50 to-orange-100 p-3 rounded-lg border border-orange-200" draggable="true" ondragstart="drag(event)" data-type="phone">
-                                        <i class="fas fa-phone text-orange-600 mr-2"></i>
-                                        <span class="text-sm font-semibold text-gray-700">Telefon</span>
+                                    <div class="form-element bg-orange-50 p-3 rounded-lg border" draggable="true" ondragstart="drag(event)" data-type="date">
+                                        <i class="fas fa-calendar text-orange-600 mr-2"></i>
+                                        <span class="text-sm font-semibold">Tarih</span>
                                     </div>
-                                    <div class="form-element bg-gradient-to-r from-pink-50 to-pink-100 p-3 rounded-lg border border-pink-200" draggable="true" ondragstart="drag(event)" data-type="date">
-                                        <i class="fas fa-calendar text-pink-600 mr-2"></i>
-                                        <span class="text-sm font-semibold text-gray-700">Tarih</span>
-                                    </div>
-                                    <div class="form-element bg-gradient-to-r from-yellow-50 to-yellow-100 p-3 rounded-lg border border-yellow-200" draggable="true" ondragstart="drag(event)" data-type="time">
-                                        <i class="fas fa-clock text-yellow-600 mr-2"></i>
-                                        <span class="text-sm font-semibold text-gray-700">Saat</span>
+                                    <div class="form-element bg-indigo-50 p-3 rounded-lg border" draggable="true" ondragstart="drag(event)" data-type="select">
+                                        <i class="fas fa-list text-indigo-600 mr-2"></i>
+                                        <span class="text-sm font-semibold">Seçim</span>
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <!-- Advanced Fields -->
-                            <div class="mb-6">
-                                <p class="text-xs font-semibold text-gray-500 mb-3 uppercase">Gelişmiş Alanlar</p>
-                                <div class="space-y-2">
-                                    <div class="form-element bg-gradient-to-r from-indigo-50 to-indigo-100 p-3 rounded-lg border border-indigo-200" draggable="true" ondragstart="drag(event)" data-type="textarea">
-                                        <i class="fas fa-align-left text-indigo-600 mr-2"></i>
-                                        <span class="text-sm font-semibold text-gray-700">Çok Satırlı Metin</span>
+                        <div class="col-span-6">
+                            <div class="bg-white rounded-2xl shadow-lg p-8">
+                                <div class="flex justify-between mb-6">
+                                    <h3 class="text-xl font-bold">Form Önizleme</h3>
+                                    <div class="flex space-x-2">
+                                        <button onclick="clearForm()" class="px-4 py-2 bg-red-100 text-red-600 rounded-lg">Temizle</button>
+                                        <button onclick="previewForm()" class="px-4 py-2 bg-blue-100 text-blue-600 rounded-lg">Önizle</button>
+                                        <button onclick="openTemplatesModal()" class="px-4 py-2 bg-green-100 text-green-600 rounded-lg">Şablonlar</button>
+                                        <button onclick="saveFormToDatabase()" class="px-4 py-2 bg-purple-600 text-white rounded-lg">Kaydet</button>
+                                        <button onclick="exportFormJSON()" class="px-4 py-2 bg-gray-700 text-white rounded-lg">Export</button>
                                     </div>
-                                    <div class="form-element bg-gradient-to-r from-teal-50 to-teal-100 p-3 rounded-lg border border-teal-200" draggable="true" ondragstart="drag(event)" data-type="select">
-                                        <i class="fas fa-list text-teal-600 mr-2"></i>
-                                        <span class="text-sm font-semibold text-gray-700">Seçim Listesi</span>
-                                    </div>
-                                    <div class="form-element bg-gradient-to-r from-cyan-50 to-cyan-100 p-3 rounded-lg border border-cyan-200" draggable="true" ondragstart="drag(event)" data-type="checkbox">
-                                        <i class="fas fa-check-square text-cyan-600 mr-2"></i>
-                                        <span class="text-sm font-semibold text-gray-700">Onay Kutusu</span>
-                                    </div>
-                                    <div class="form-element bg-gradient-to-r from-red-50 to-red-100 p-3 rounded-lg border border-red-200" draggable="true" ondragstart="drag(event)" data-type="radio">
-                                        <i class="fas fa-dot-circle text-red-600 mr-2"></i>
-                                        <span class="text-sm font-semibold text-gray-700">Seçenek</span>
-                                    </div>
-                                    <div class="form-element bg-gradient-to-r from-gray-50 to-gray-100 p-3 rounded-lg border border-gray-200" draggable="true" ondragstart="drag(event)" data-type="file">
-                                        <i class="fas fa-file-upload text-gray-600 mr-2"></i>
-                                        <span class="text-sm font-semibold text-gray-700">Dosya Yükleme</span>
+                                </div>
+                                <div id="formCanvas" class="drop-zone p-6" ondrop="drop(event)" ondragover="allowDrop(event)">
+                                    <div class="text-center text-gray-400 py-20">
+                                        <i class="fas fa-mouse-pointer text-6xl mb-4"></i>
+                                        <p class="text-lg font-semibold">Soldan elemanları buraya sürükleyin</p>
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <!-- Special Fields -->
-                            <div>
-                                <p class="text-xs font-semibold text-gray-500 mb-3 uppercase">Özel Alanlar</p>
-                                <div class="space-y-2">
-                                    <div class="form-element bg-gradient-to-r from-purple-50 to-pink-100 p-3 rounded-lg border border-purple-200" draggable="true" ondragstart="drag(event)" data-type="currency">
-                                        <i class="fas fa-lira-sign text-purple-600 mr-2"></i>
-                                        <span class="text-sm font-semibold text-gray-700">Para Birimi</span>
-                                    </div>
-                                    <div class="form-element bg-gradient-to-r from-green-50 to-emerald-100 p-3 rounded-lg border border-green-200" draggable="true" ondragstart="drag(event)" data-type="location">
-                                        <i class="fas fa-map-marker-alt text-green-600 mr-2"></i>
-                                        <span class="text-sm font-semibold text-gray-700">Konum</span>
-                                    </div>
-                                    <div class="form-element bg-gradient-to-r from-blue-50 to-sky-100 p-3 rounded-lg border border-blue-200" draggable="true" ondragstart="drag(event)" data-type="signature">
-                                        <i class="fas fa-signature text-blue-600 mr-2"></i>
-                                        <span class="text-sm font-semibold text-gray-700">İmza</span>
+                        <div class="col-span-3">
+                            <div class="bg-white rounded-2xl shadow-lg p-6 sticky top-24">
+                                <h3 class="text-lg font-bold text-gray-800 mb-6">Alan Ayarları</h3>
+                                <div id="fieldSettings" class="settings-panel">
+                                    <div class="text-center text-gray-400 py-12">
+                                        <i class="fas fa-hand-pointer text-5xl mb-3"></i>
+                                        <p class="text-sm">Bir alan seçin</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Center - Form Preview -->
-                    <div class="col-span-6">
-                        <div class="bg-white rounded-2xl shadow-lg p-8">
-                            <div class="flex items-center justify-between mb-6">
-                                <div>
-                                    <h3 class="text-xl font-bold text-gray-800 mb-1">Form Önizleme</h3>
-                                    <p class="text-sm text-gray-500">Alanları sürükle-bırak ile ekleyin</p>
+                <!-- Ayarlar Page -->
+                <div id="ayarlar-page" class="page-content p-8">
+                    <div class="bg-white rounded-2xl shadow-lg p-8">
+                        <h2 class="text-3xl font-bold text-gray-800 mb-8 flex items-center">
+                            <i class="fas fa-cog text-purple-600 mr-4"></i>
+                            Sistem Ayarları
+                        </h2>
+
+                        <div class="flex space-x-2 mb-8 border-b border-gray-200 pb-4">
+                            <button class="ayarlar-tab-btn active px-6 py-3 rounded-t-lg font-semibold" onclick="showAyarlarTab('profil-ayarlar')">
+                                <i class="fas fa-user mr-2"></i>Profil
+                            </button>
+                            <button class="ayarlar-tab-btn px-6 py-3 rounded-t-lg font-semibold" onclick="showAyarlarTab('kullanici-ayarlar')">
+                                <i class="fas fa-users mr-2"></i>Kullanıcılar
+                            </button>
+                            <button class="ayarlar-tab-btn px-6 py-3 rounded-t-lg font-semibold" onclick="showAyarlarTab('form-ayarlar')">
+                                <i class="fas fa-magic mr-2"></i>Form Builder
+                            </button>
+                            <button class="ayarlar-tab-btn px-6 py-3 rounded-t-lg font-semibold" onclick="showAyarlarTab('kurum-ayarlar')">
+                                <i class="fas fa-building mr-2"></i>Kurum
+                            </button>
+                            <button class="ayarlar-tab-btn px-6 py-3 rounded-t-lg font-semibold" onclick="showAyarlarTab('tema-ayarlar')">
+                                <i class="fas fa-palette mr-2"></i>Tema
+                            </button>
+                        </div>
+
+                        <div id="profil-ayarlar" class="ayarlar-tab-content active">
+                            <div class="grid grid-cols-3 gap-6">
+                                <div class="bg-gray-50 rounded-xl p-6">
+                                    <div class="text-center mb-4">
+                                        <div class="w-24 h-24 bg-purple-500 rounded-full mx-auto flex items-center justify-center text-white text-3xl font-bold mb-4" id="ayarlarAvatar">
+                                            U
+                                        </div>
+                                        <h3 class="font-bold text-gray-800" id="ayarlarUserName">Kullanıcı</h3>
+                                        <p class="text-sm text-gray-500" id="ayarlarUserEmail">email@example.com</p>
+                                    </div>
                                 </div>
-                                <div class="flex items-center space-x-2">
-                                    <button onclick="clearForm()" class="px-4 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition">
-                                        <i class="fas fa-trash mr-2"></i>Temizle
-                                    </button>
-                                    <button onclick="previewForm()" class="px-4 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition">
-                                        <i class="fas fa-eye mr-2"></i>Önizle
-                                    </button>
-                                    <button onclick="openTemplatesModal()" class="px-4 py-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition">
-                                        <i class="fas fa-folder-open mr-2"></i>Şablonlar
-                                    </button>
-                                    <button onclick="saveFormToDatabase()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
+                                <div class="col-span-2 bg-gray-50 rounded-xl p-6">
+                                    <h4 class="font-bold text-gray-800 mb-4">Profil Bilgileri</h4>
+                                    <form id="ayarlarProfilForm" class="space-y-3">
+                                        <input type="text" id="ayarlarFullName" placeholder="Ad Soyad" class="w-full px-4 py-2 border rounded-lg">
+                                        <input type="tel" id="ayarlarPhone" placeholder="Telefon" class="w-full px-4 py-2 border rounded-lg">
+                                        <button type="submit" class="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                                            <i class="fas fa-save mr-2"></i>Kaydet
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="kullanici-ayarlar" class="ayarlar-tab-content">
+                            <div class="flex justify-between items-center mb-6">
+                                <h4 class="font-bold text-gray-800">Kullanıcı Listesi</h4>
+                                <button onclick="openModal('newUserModal')" class="px-4 py-2 bg-purple-600 text-white rounded-lg">
+                                    <i class="fas fa-user-plus mr-2"></i>Yeni
+                                </button>
+                            </div>
+                            <div id="ayarlarUsersList" class="bg-gray-50 rounded-xl p-6">
+                                <p class="text-gray-500 text-center">Yükleniyor...</p>
+                            </div>
+                        </div>
+
+                        <div id="form-ayarlar" class="ayarlar-tab-content">
+                            <div class="bg-gradient-to-r from-purple-500 to-blue-600 rounded-xl p-8 text-white text-center">
+                                <i class="fas fa-magic text-6xl mb-4"></i>
+                                <h3 class="text-2xl font-bold mb-4">Form Builder</h3>
+                                <p class="mb-6">Sistem formlarını görsel olarak düzenleyin</p>
+                                <button onclick="navigateToPage('formbuilder')" class="px-8 py-3 bg-white text-purple-600 rounded-xl font-semibold hover:shadow-xl">
+                                    <i class="fas fa-external-link-alt mr-2"></i>Tam Ekran Aç
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="kurum-ayarlar" class="ayarlar-tab-content">
+                            <h4 class="font-bold text-gray-800 mb-4">Kurum Bilgileri</h4>
+                            <div class="grid grid-cols-2 gap-4 bg-gray-50 rounded-xl p-6">
+                                <input type="text" placeholder="Kurum Adı" class="px-4 py-2 border rounded-lg">
+                                <input type="text" placeholder="Vergi No" class="px-4 py-2 border rounded-lg">
+                                <input type="tel" placeholder="Telefon" class="px-4 py-2 border rounded-lg">
+                                <input type="email" placeholder="E-posta" class="px-4 py-2 border rounded-lg">
+                                <div class="col-span-2">
+                                    <button class="px-6 py-2 bg-purple-600 text-white rounded-lg">
                                         <i class="fas fa-save mr-2"></i>Kaydet
                                     </button>
-                                    <button onclick="exportFormJSON()" class="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition">
-                                        <i class="fas fa-code mr-2"></i>Export
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Form Drop Zone -->
-                            <div id="formCanvas" class="drop-zone p-6" ondrop="drop(event)" ondragover="allowDrop(event)">
-                                <div class="text-center text-gray-400 py-20">
-                                    <i class="fas fa-mouse-pointer text-6xl mb-4"></i>
-                                    <p class="text-lg font-semibold">Soldan form elemanlarını buraya sürükleyin</p>
-                                    <p class="text-sm mt-2">veya şablon seçerek başlayın</p>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Right Sidebar - Field Settings -->
-                    <div class="col-span-3">
-                        <div class="bg-white rounded-2xl shadow-lg p-6 sticky top-24">
-                            <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center">
-                                <i class="fas fa-sliders-h text-blue-600 mr-2"></i>
-                                Alan Ayarları
-                            </h3>
-
-                            <div id="fieldSettings" class="settings-panel">
-                                <div class="text-center text-gray-400 py-12">
-                                    <i class="fas fa-hand-pointer text-5xl mb-3"></i>
-                                    <p class="text-sm">Bir alan seçerek<br>özelliklerini düzenleyin</p>
-                                </div>
+                        <div id="tema-ayarlar" class="ayarlar-tab-content">
+                            <h4 class="font-bold text-gray-800 mb-4">Tema Ayarları</h4>
+                            <div class="bg-gray-50 rounded-xl p-6">
+                                <p class="text-gray-600">
+                                    <i class="fas fa-moon mr-2"></i>
+                                    Dark Mode header'daki ay/güneş ikonundan aktif edilebilir
+                                </p>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
             </div>
         </div>
     </div>
-
-    <!-- Gelir Modal -->
+    <!-- Income Modal -->
     <div id="incomeModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
         <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
-            <h3 class="text-2xl font-bold mb-4">Yeni Gelir Kaydı</h3>
+            <h3 class="text-2xl font-bold mb-4">Yeni Gelir Ekle</h3>
             <form id="incomeForm" class="space-y-4">
                 <input type="text" placeholder="Başlık" class="w-full px-4 py-2 border rounded-lg" required>
                 <input type="number" placeholder="Tutar" class="w-full px-4 py-2 border rounded-lg" required>
                 <select class="w-full px-4 py-2 border rounded-lg" required>
-                    <option>Bağış</option>
-                    <option>Kurban</option>
-                    <option>Proje</option>
+                    <option value="">Kategori Seçin</option>
+                    <option value="donation">Bağış</option>
+                    <option value="project">Proje</option>
+                    <option value="other">Diğer</option>
                 </select>
                 <div class="flex space-x-3">
-                    <button type="submit" class="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">Kaydet</button>
+                    <button type="submit" class="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">Ekle</button>
                     <button type="button" onclick="closeModal('incomeModal')" class="flex-1 bg-gray-300 py-2 rounded-lg hover:bg-gray-400">İptal</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Gider Modal -->
+    <!-- Expense Modal -->
     <div id="expenseModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
         <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
-            <h3 class="text-2xl font-bold mb-4">Yeni Gider Kaydı</h3>
+            <h3 class="text-2xl font-bold mb-4">Yeni Gider Ekle</h3>
             <form id="expenseForm" class="space-y-4">
                 <input type="text" placeholder="Başlık" class="w-full px-4 py-2 border rounded-lg" required>
                 <input type="number" placeholder="Tutar" class="w-full px-4 py-2 border rounded-lg" required>
                 <select class="w-full px-4 py-2 border rounded-lg" required>
-                    <option>Tesis</option>
-                    <option>Personel</option>
-                    <option>Proje</option>
+                    <option value="">Kategori Seçin</option>
+                    <option value="salary">Maaş</option>
+                    <option value="facility">Tesis</option>
+                    <option value="project">Proje</option>
+                    <option value="other">Diğer</option>
                 </select>
                 <div class="flex space-x-3">
-                    <button type="submit" class="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700">Kaydet</button>
+                    <button type="submit" class="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700">Ekle</button>
                     <button type="button" onclick="closeModal('expenseModal')" class="flex-1 bg-gray-300 py-2 rounded-lg hover:bg-gray-400">İptal</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Proje Modal -->
+    <!-- Project Modal -->
     <div id="projectModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
         <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
-            <h3 class="text-2xl font-bold mb-4">Yeni Proje</h3>
+            <h3 class="text-2xl font-bold mb-4">Yeni Proje Ekle</h3>
             <form id="projectForm" class="space-y-4">
                 <input type="text" placeholder="Proje Adı" class="w-full px-4 py-2 border rounded-lg" required>
                 <input type="number" placeholder="Bütçe" class="w-full px-4 py-2 border rounded-lg" required>
-                <input type="date" class="w-full px-4 py-2 border rounded-lg" required>
+                <input type="date" placeholder="Başlangıç Tarihi" class="w-full px-4 py-2 border rounded-lg" required>
                 <div class="flex space-x-3">
-                    <button type="submit" class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">Oluştur</button>
+                    <button type="submit" class="flex-1 bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700">Ekle</button>
                     <button type="button" onclick="closeModal('projectModal')" class="flex-1 bg-gray-300 py-2 rounded-lg hover:bg-gray-400">İptal</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Kurban Modal -->
+    <!-- Sacrifice Modal -->
     <div id="sacrificeModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
         <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
-            <h3 class="text-2xl font-bold mb-4">Kurban Kaydı</h3>
+            <h3 class="text-2xl font-bold mb-4">Yeni Kurban Kaydı</h3>
             <form id="sacrificeForm" class="space-y-4">
-                <input type="text" placeholder="Bağışçı Adı" class="w-full px-4 py-2 border rounded-lg" required>
+                <input type="text" placeholder="Ad Soyad" class="w-full px-4 py-2 border rounded-lg" required>
                 <input type="tel" placeholder="Telefon" class="w-full px-4 py-2 border rounded-lg" required>
                 <input type="number" placeholder="Tutar" class="w-full px-4 py-2 border rounded-lg" required>
                 <select class="w-full px-4 py-2 border rounded-lg" required>
-                    <option>Tek Kurban</option>
-                    <option>Hisseli Kurban</option>
+                    <option value="">Kurban Türü</option>
+                    <option value="single">Tek Kurban</option>
+                    <option value="shared">Hisseli Kurban</option>
                 </select>
                 <div class="flex space-x-3">
-                    <button type="submit" class="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700">Kaydet</button>
+                    <button type="submit" class="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700">Ekle</button>
                     <button type="button" onclick="closeModal('sacrificeModal')" class="flex-1 bg-gray-300 py-2 rounded-lg hover:bg-gray-400">İptal</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Bildirim Modalı -->
-    <div id="notificationModal" class="fixed top-16 right-4 w-96 bg-white rounded-xl shadow-2xl z-50 hidden">
-        <div class="p-4 border-b border-gray-200">
-            <div class="flex items-center justify-between">
-                <h3 class="font-bold text-gray-800">
-                    <i class="fas fa-bell mr-2 text-purple-600"></i>Bildirimler
-                </h3>
-                <button onclick="closeNotifications()" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        </div>
-        <div id="notificationList" class="max-h-96 overflow-y-auto">
-            <p class="text-gray-500 text-center py-8 text-sm">Henüz bildirim yok</p>
-        </div>
-        <div class="p-3 border-t border-gray-200 text-center">
-            <button onclick="markAllAsRead()" class="text-sm text-purple-600 hover:text-purple-800 font-semibold">
-                Tümünü Okundu İşaretle
-            </button>
-        </div>
-    </div>
-    <!-- Yeni Kullanıcı Modal -->
+    <!-- New User Modal -->
     <div id="newUserModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
         <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
             <h3 class="text-2xl font-bold mb-4">Yeni Kullanıcı Ekle</h3>
@@ -1007,87 +821,56 @@
             </form>
         </div>
     </div>
+
+    <!-- Notification Modal -->
+    <div id="notificationModal" class="fixed top-20 right-8 w-96 bg-white rounded-2xl shadow-2xl hidden z-50 max-h-[600px] overflow-hidden">
+        <div class="p-4 border-b flex items-center justify-between">
+            <h3 class="font-bold text-gray-800">Bildirimler</h3>
+            <div class="flex space-x-2">
+                <button onclick="markAllAsRead()" class="text-xs text-blue-600 hover:text-blue-800">Tümünü Okundu</button>
+                <button onclick="closeNotifications()" class="text-gray-600 hover:text-gray-800">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <div id="notificationList" class="overflow-y-auto" style="max-height: 500px;">
+            <p class="text-gray-500 text-center py-8 text-sm">Bildirim yok</p>
+        </div>
+    </div>
+
     <!-- Templates Modal -->
     <div id="templatesModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
         <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-2xl font-bold text-gray-800">Form Şablonları</h3>
-                <button onclick="closeTemplatesModal()" class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gray-200 transition">
+                <button onclick="closeTemplatesModal()" class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gray-200">
                     <i class="fas fa-times text-gray-600"></i>
                 </button>
             </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="template-card border-2 border-gray-200 rounded-xl p-6 hover:border-purple-500 cursor-pointer transition" onclick="loadTemplate('gelir')">
+            <div class="grid grid-cols-3 gap-6">
+                <div class="template-card border-2 border-gray-200 rounded-xl p-6 hover:border-purple-500 cursor-pointer" onclick="loadTemplate('gelir')">
                     <div class="w-full h-32 bg-gradient-to-br from-green-100 to-green-200 rounded-lg mb-4 flex items-center justify-center">
                         <i class="fas fa-arrow-down text-5xl text-green-600"></i>
                     </div>
                     <h4 class="font-bold text-gray-800 mb-2">Gelir Formu</h4>
-                    <p class="text-sm text-gray-500 mb-4">Bağış ve gelir kayıtları için standart form</p>
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs text-gray-500">8 Alan</span>
-                        <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">Popüler</span>
-                    </div>
+                    <p class="text-sm text-gray-500 mb-4">Bağış ve gelir kayıtları</p>
+                    <span class="text-xs text-gray-500">8 Alan</span>
                 </div>
-
-                <div class="template-card border-2 border-gray-200 rounded-xl p-6 hover:border-purple-500 cursor-pointer transition" onclick="loadTemplate('gider')">
+                <div class="template-card border-2 border-gray-200 rounded-xl p-6 hover:border-purple-500 cursor-pointer" onclick="loadTemplate('gider')">
                     <div class="w-full h-32 bg-gradient-to-br from-red-100 to-red-200 rounded-lg mb-4 flex items-center justify-center">
                         <i class="fas fa-arrow-up text-5xl text-red-600"></i>
                     </div>
                     <h4 class="font-bold text-gray-800 mb-2">Gider Formu</h4>
-                    <p class="text-sm text-gray-500 mb-4">Harcama ve gider kayıtları için form</p>
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs text-gray-500">9 Alan</span>
-                        <span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold">Popüler</span>
-                    </div>
+                    <p class="text-sm text-gray-500 mb-4">Harcama kayıtları</p>
+                    <span class="text-xs text-gray-500">9 Alan</span>
                 </div>
-
-                <div class="template-card border-2 border-gray-200 rounded-xl p-6 hover:border-purple-500 cursor-pointer transition" onclick="loadTemplate('kurban')">
+                <div class="template-card border-2 border-gray-200 rounded-xl p-6 hover:border-purple-500 cursor-pointer" onclick="loadTemplate('kurban')">
                     <div class="w-full h-32 bg-gradient-to-br from-orange-100 to-orange-200 rounded-lg mb-4 flex items-center justify-center">
                         <i class="fas fa-mosque text-5xl text-orange-600"></i>
                     </div>
-                    <h4 class="font-bold text-gray-800 mb-2">Kurban Kayıt Formu</h4>
-                    <p class="text-sm text-gray-500 mb-4">Kurban organizasyonu için detaylı form</p>
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs text-gray-500">12 Alan</span>
-                        <span class="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-semibold">Özel</span>
-                    </div>
-                </div>
-
-                <div class="template-card border-2 border-gray-200 rounded-xl p-6 hover:border-purple-500 cursor-pointer transition" onclick="loadTemplate('personel')">
-                    <div class="w-full h-32 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg mb-4 flex items-center justify-center">
-                        <i class="fas fa-user-plus text-5xl text-blue-600"></i>
-                    </div>
-                    <h4 class="font-bold text-gray-800 mb-2">Personel Formu</h4>
-                    <p class="text-sm text-gray-500 mb-4">Yeni personel kayıt formu</p>
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs text-gray-500">12 Alan</span>
-                        <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">Standart</span>
-                    </div>
-                </div>
-
-                <div class="template-card border-2 border-gray-200 rounded-xl p-6 hover:border-purple-500 cursor-pointer transition" onclick="loadTemplate('proje')">
-                    <div class="w-full h-32 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg mb-4 flex items-center justify-center">
-                        <i class="fas fa-project-diagram text-5xl text-purple-600"></i>
-                    </div>
-                    <h4 class="font-bold text-gray-800 mb-2">Proje Formu</h4>
-                    <p class="text-sm text-gray-500 mb-4">Yeni proje başvuru formu</p>
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs text-gray-500">10 Alan</span>
-                        <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-semibold">Standart</span>
-                    </div>
-                </div>
-
-                <div class="template-card border-2 border-gray-200 rounded-xl p-6 hover:border-purple-500 cursor-pointer transition" onclick="loadTemplate('tesis')">
-                    <div class="w-full h-32 bg-gradient-to-br from-pink-100 to-pink-200 rounded-lg mb-4 flex items-center justify-center">
-                        <i class="fas fa-building text-5xl text-pink-600"></i>
-                    </div>
-                    <h4 class="font-bold text-gray-800 mb-2">Tesis Formu</h4>
-                    <p class="text-sm text-gray-500 mb-4">Tesis kayıt ve güncelleme formu</p>
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs text-gray-500">10 Alan</span>
-                        <span class="px-3 py-1 bg-pink-100 text-pink-800 rounded-full text-xs font-semibold">Standart</span>
-                    </div>
+                    <h4 class="font-bold text-gray-800 mb-2">Kurban Formu</h4>
+                    <p class="text-sm text-gray-500 mb-4">Kurban kayıtları</p>
+                    <span class="text-xs text-gray-500">12 Alan</span>
                 </div>
             </div>
         </div>
@@ -1098,15 +881,13 @@
         <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-2xl font-bold text-gray-800">Form Önizleme</h3>
-                <button onclick="closePreviewModal()" class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gray-200 transition">
+                <button onclick="closePreviewModal()" class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gray-200">
                     <i class="fas fa-times text-gray-600"></i>
                 </button>
             </div>
             <div id="previewContent" class="space-y-4"></div>
             <div class="mt-6 flex justify-end">
-                <button onclick="closePreviewModal()" class="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold hover:shadow-xl transition">
-                    Kapat
-                </button>
+                <button onclick="closePreviewModal()" class="px-6 py-3 bg-purple-600 text-white rounded-xl font-semibold">Kapat</button>
             </div>
         </div>
     </div>
@@ -1116,22 +897,24 @@
         <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-2xl font-bold text-gray-800">Form Export - JSON</h3>
-                <button onclick="closeExportModal()" class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gray-200 transition">
+                <button onclick="closeExportModal()" class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gray-200">
                     <i class="fas fa-times text-gray-600"></i>
                 </button>
             </div>
             <div class="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm overflow-x-auto" id="exportCode"></div>
             <div class="mt-6 flex justify-between">
-                <button onclick="copyToClipboard()" class="px-6 py-3 bg-gray-700 text-white rounded-xl font-semibold hover:bg-gray-600 transition">
+                <button onclick="copyToClipboard()" class="px-6 py-3 bg-gray-700 text-white rounded-xl font-semibold">
                     <i class="fas fa-copy mr-2"></i>Kopyala
                 </button>
-                <button onclick="downloadJSON()" class="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold hover:shadow-xl transition">
+                <button onclick="downloadJSON()" class="px-6 py-3 bg-purple-600 text-white rounded-xl font-semibold">
                     <i class="fas fa-download mr-2"></i>İndir
                 </button>
             </div>
         </div>
     </div>
-        <script src="./js/config.js"></script>
+
+    <!-- Scripts -->
+    <script src="./js/config.js"></script>
     <script src="./js/finance.js"></script>
     <script src="./js/modules.js"></script>
     <script src="./js/charts.js"></script>
@@ -1140,6 +923,8 @@
     <script src="./js/profile.js"></script>
     <script src="./js/i18n.js"></script>
     <script src="./js/form-builder.js"></script>
+    <script src="./js/facility-detail.js"></script>
+    <script src="./js/project-detail.js"></script>
     <script src="./js/dashboard.js"></script>
 </body>
 </html>
