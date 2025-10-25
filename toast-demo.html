@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Toast Manager Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-8">
+        <h1 class="text-3xl font-bold mb-8">Toast Manager Demo</h1>
+        
+        <div class="grid grid-cols-2 gap-4">
+            <button onclick="ToastManager.success('Başarılı işlem!')" class="px-6 py-3 bg-green-500 text-white rounded-lg">
+                Success Toast
+            </button>
+            
+            <button onclick="ToastManager.error('Hata oluştu!')" class="px-6 py-3 bg-red-500 text-white rounded-lg">
+                Error Toast
+            </button>
+            
+            <button onclick="ToastManager.warning('Dikkat!')" class="px-6 py-3 bg-yellow-500 text-white rounded-lg">
+                Warning Toast
+            </button>
+            
+            <button onclick="ToastManager.info('Bilgi mesajı')" class="px-6 py-3 bg-blue-500 text-white rounded-lg">
+                Info Toast
+            </button>
+            
+            <button onclick="testLoading()" class="px-6 py-3 bg-purple-500 text-white rounded-lg">
+                Loading Toast
+            </button>
+            
+            <button onclick="testPromise()" class="px-6 py-3 bg-indigo-500 text-white rounded-lg">
+                Promise Toast
+            </button>
+            
+            <button onclick="testConfirm()" class="px-6 py-3 bg-cyan-500 text-white rounded-lg">
+                Confirm Dialog
+            </button>
+            
+            <button onclick="testPrompt()" class="px-6 py-3 bg-pink-500 text-white rounded-lg">
+                Prompt Dialog
+            </button>
+            
+            <button onclick="ToastManager.clear()" class="px-6 py-3 bg-gray-500 text-white rounded-lg">
+                Clear All
+            </button>
+        </div>
+    </div>
+
+    <script src="./js/toast.js"></script>
+    <script>
+        async function testLoading() {
+            const toast = ToastManager.loading('İşlem yapılıyor...');
+            setTimeout(() => {
+                toast.update('İşlem tamamlandı!', 'success');
+            }, 2000);
+        }
+
+        async function testPromise() {
+            await ToastManager.promise(
+                new Promise((resolve) => setTimeout(resolve, 2000)),
+                {
+                    loading: 'Bekleniyor...',
+                    success: 'Tamamlandı!',
+                    error: 'Hata!'
+                }
+            );
+        }
+
+        async function testConfirm() {
+            const result = await ToastManager.confirm('Emin misiniz?');
+            ToastManager.info(result ? 'Onaylandı' : 'İptal edildi');
+        }
+
+        async function testPrompt() {
+            const name = await ToastManager.prompt('Adınız?', 'Giriş');
+            if (name) ToastManager.success(`Merhaba ${name}!`);
+        }
+    </script>
+</body>
+</html>

@@ -518,24 +518,6 @@ window.closeModal = (modalId) => {
         modal.classList.remove('flex');
     }
 };
-// Toast bildirimi
-function showToast(message, type = 'info') {
-    const colors = {
-        success: 'bg-green-500',
-        error: 'bg-red-500',
-        info: 'bg-blue-500'
-    };
-
-    const toast = document.createElement('div');
-    toast.className = `fixed top-4 right-4 ${colors[type]} text-white px-6 py-4 rounded-lg shadow-xl z-50 animate-fade-in`;
-    toast.innerHTML = `<i class="fas fa-check-circle mr-2"></i>${message}`;
-    
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.remove();
-    }, 3000);
-}
 
 // Yardımcı fonksiyonlar
 function formatCurrency(amount) {
