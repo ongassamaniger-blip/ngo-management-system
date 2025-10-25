@@ -593,29 +593,9 @@
                     <div class="card p-6">
                         <div class="flex items-center justify-between mb-6">
                             <h3 class="text-xl font-bold text-gray-800">Personel Listesi</h3>
-                            <div class="flex space-x-2">
-                                <button onclick="togglePersonnelView()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition">
-                                    <i class="fas fa-th mr-2"></i>Görünüm
-                                </button>
-                                <button onclick="openAddPersonnelModal()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
-                                    <i class="fas fa-user-plus mr-2"></i>Yeni Personel
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Filters -->
-                        <div class="mb-6 flex space-x-4">
-                            <input type="text" id="personnelSearch" placeholder="Personel ara..." 
-                                   onkeyup="searchPersonnel(this.value)"
-                                   class="flex-1 px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none">
-                            <select id="personnelDepartmentFilter" onchange="filterPersonnelByDepartment(this.value)" 
-                                    class="px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none">
-                                <option value="">Tüm Departmanlar</option>
-                                <option value="hr">İnsan Kaynakları</option>
-                                <option value="finance">Finans</option>
-                                <option value="operations">Operasyon</option>
-                                <option value="management">Yönetim</option>
-                            </select>
+                            <button class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
+                                <i class="fas fa-user-plus mr-2"></i>Yeni Personel
+                            </button>
                         </div>
 
                         <div id="personnelGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -626,33 +606,12 @@
 
                 <!-- Harcamalar Tab -->
                 <div id="harcamalar" class="tab-content">
-                    <!-- Expense Charts -->
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                        <div class="card p-6">
-                            <h3 class="text-lg font-bold text-gray-800 mb-4">Kategori Dağılımı</h3>
-                            <canvas id="expensePieChart" style="height: 250px;"></canvas>
-                        </div>
-                        <div class="card p-6">
-                            <h3 class="text-lg font-bold text-gray-800 mb-4">Kategori Bazlı Harcamalar</h3>
-                            <canvas id="expenseBarChart" style="height: 250px;"></canvas>
-                        </div>
-                    </div>
-
-                    <!-- Expenses Table -->
                     <div class="card p-6">
                         <div class="flex items-center justify-between mb-6">
                             <h3 class="text-xl font-bold text-gray-800">Son Harcamalar</h3>
-                            <div class="flex space-x-2">
-                                <button onclick="exportExpensesToExcel()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-                                    <i class="fas fa-file-excel mr-2"></i>Excel
-                                </button>
-                                <button onclick="exportExpensesToPDF()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
-                                    <i class="fas fa-file-pdf mr-2"></i>PDF
-                                </button>
-                                <button onclick="openAddExpenseModal()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
-                                    <i class="fas fa-plus mr-2"></i>Yeni Harcama
-                                </button>
-                            </div>
+                            <button class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
+                                <i class="fas fa-plus mr-2"></i>Yeni Harcama
+                            </button>
                         </div>
 
                         <div class="overflow-x-auto">
@@ -664,11 +623,10 @@
                                         <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Kategori</th>
                                         <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Tutar</th>
                                         <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Durum</th>
-                                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">İşlem</th>
                                     </tr>
                                 </thead>
                                 <tbody id="expensesTable">
-                                    <tr><td colspan="6" class="text-center py-8 text-gray-500">Yükleniyor...</td></tr>
+                                    <tr><td colspan="5" class="text-center py-8 text-gray-500">Yükleniyor...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -677,49 +635,7 @@
 
                 <!-- Projeler Tab -->
                 <div id="projeler" class="tab-content">
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-xl font-bold text-gray-800">Projeler</h3>
-                        <div class="flex space-x-2">
-                            <button onclick="toggleProjectsView()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition">
-                                <i class="fas fa-columns mr-2"></i>Kanban
-                            </button>
-                            <button onclick="openAddProjectModal()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-                                <i class="fas fa-plus mr-2"></i>Yeni Proje
-                            </button>
-                        </div>
-                    </div>
                     <div id="projectsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <p class="text-gray-500 text-center py-8">Yükleniyor...</p>
-                    </div>
-                </div>
-
-                <!-- Faydalanıcılar Tab (NEW) -->
-                <div id="faydalanicilar" class="tab-content">
-                    <div id="beneficiariesContent">
-                        <p class="text-gray-500 text-center py-8">Yükleniyor...</p>
-                    </div>
-                </div>
-
-                <!-- Etkinlikler Tab (NEW) -->
-                <div id="etkinlikler" class="tab-content">
-                    <div id="eventsContent">
-                        <p class="text-gray-500 text-center py-8">Yükleniyor...</p>
-                    </div>
-                    <div id="upcomingEvents" class="mt-6">
-                        <!-- Upcoming events list -->
-                    </div>
-                </div>
-
-                <!-- Raporlar Tab (NEW) -->
-                <div id="raporlar" class="tab-content">
-                    <div id="reportsContent">
-                        <p class="text-gray-500 text-center py-8">Yükleniyor...</p>
-                    </div>
-                </div>
-
-                <!-- Ayarlar Tab (NEW) -->
-                <div id="ayarlar" class="tab-content">
-                    <div id="settingsContent">
                         <p class="text-gray-500 text-center py-8">Yükleniyor...</p>
                     </div>
                 </div>
@@ -728,7 +644,52 @@
     </div>
 
     <script src="./js/config.js"></script>
-    <script src="./js/toast.js"></script>
     <script src="./js/facility-detail.js"></script>
+    <script>
+        // Toast function
+        function showToast(message, type = 'info') {
+            const colors = {
+                success: 'bg-green-500',
+                error: 'bg-red-500',
+                info: 'bg-blue-500'
+            };
+
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 ${colors[type]} text-white px-6 py-4 rounded-lg shadow-xl z-50`;
+            toast.innerHTML = `<i class="fas fa-check-circle mr-2"></i>${message}`;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // Rapor export
+        function exportFacilityReport() {
+            showToast('Rapor hazırlanıyor...', 'info');
+            // TODO: PDF export
+        }
+
+        // Sayfa yüklendiğinde
+        document.addEventListener('DOMContentLoaded', async () => {
+            // URL'den facility ID al
+            const urlParams = new URLSearchParams(window.location.search);
+            const facilityId = urlParams.get('id');
+
+            if (!facilityId) {
+                showToast('Tesis bulunamadı!', 'error');
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 2000);
+                return;
+            }
+
+            // Tesis detaylarını yükle
+            await window.FacilityDetailModule.loadFacilityDetail(facilityId);
+        });
+    </script>
+	<script src="./js/config.js"></script>
+<script src="./js/toast.js"></script>  <!-- 🆕 EKLE -->
 </body>
 </html>
