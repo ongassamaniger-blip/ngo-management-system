@@ -22,8 +22,13 @@ async function initializePage() {
         const urlParams = new URLSearchParams(window.location.search);
         const facilityId = urlParams.get('id');
 
-        if (!facilityId) {
-            ToastManager.error('Tesis ID bulunamadı!');
+        // Validate facility ID using shared validation utility
+        if (!window.ValidationUtils || !window.ValidationUtils.isValidFacilityId(facilityId)) {
+            const errorMsg = window.ValidationUtils 
+                ? window.ValidationUtils.getInvalidIdErrorMessage('tesis', facilityId)
+                : 'Tesis ID bulunamadı! Lütfen dashboard üzerinden bir tesis seçin.';
+            
+            ToastManager.error(errorMsg);
             setTimeout(() => {
                 window.location.href = 'dashboard.html';
             }, 2000);
@@ -115,9 +120,17 @@ async function loadFacilityDetail(facilityId) {
             .eq('id', facilityId)
             .single();
 
-        if (error) throw error;
+        if (error) {
+            console.error('Facility fetch error:', error);
+            if (error.code === 'PGRST116') {
+                // No rows returned
+                throw new Error('Bu tesis bulunamadı. Tesis silinmiş veya yetkiniz olmayabilir.');
+            }
+            throw new Error(`Tesis yüklenirken hata oluştu: ${error.message}`);
+        }
+        
         if (!facility) {
-            throw new Error('Tesis bulunamadı');
+            throw new Error('Tesis bulunamadı. Lütfen dashboard üzerinden geçerli bir tesis seçin.');
         }
 
         currentFacility = facility;
