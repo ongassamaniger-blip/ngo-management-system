@@ -98,21 +98,42 @@ function filterValidEntities(entities, idField = 'id') {
 }
 
 /**
+ * Capitalizes the first letter of a string
+ * @param {string} str - The string to capitalize
+ * @returns {string} - Capitalized string
+ */
+function capitalizeFirstLetter(str) {
+    if (!str || typeof str !== 'string') {
+        return str;
+    }
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+/**
  * Gets a user-friendly error message for invalid ID
  * @param {string} entityType - Type of entity (e.g., 'tesis', 'proje')
  * @param {string} id - The invalid ID
  * @returns {string} - Error message in Turkish
  */
 function getInvalidIdErrorMessage(entityType = 'tesis', id = null) {
-    if (!id || id === 'null' || id === 'undefined' || id.trim() === '') {
-        return `${entityType.charAt(0).toUpperCase() + entityType.slice(1)} ID bulunamadı! Lütfen dashboard üzerinden bir ${entityType} seçin.`;
+    const capitalizedEntity = capitalizeFirstLetter(entityType);
+    
+    // Check if ID is null, undefined, or invalid string
+    if (!id || id === 'null' || id === 'undefined') {
+        return `${capitalizedEntity} ID bulunamadı! Lütfen dashboard üzerinden bir ${entityType} seçin.`;
     }
     
+    // Check for empty string (with safe string conversion and trim)
+    if (typeof id === 'string' && id.trim() === '') {
+        return `${capitalizedEntity} ID bulunamadı! Lütfen dashboard üzerinden bir ${entityType} seçin.`;
+    }
+    
+    // Check UUID format
     if (!isValidUUID(id)) {
         return `Geçersiz ${entityType} ID formatı! Lütfen dashboard üzerinden bir ${entityType} seçin.`;
     }
     
-    return `${entityType.charAt(0).toUpperCase() + entityType.slice(1)} bulunamadı.`;
+    return `${capitalizedEntity} bulunamadı.`;
 }
 
 // Export for use in other modules
@@ -123,7 +144,11 @@ window.ValidationUtils = {
     isValidProjectId,
     hasValidId,
     filterValidEntities,
-    getInvalidIdErrorMessage
+    getInvalidIdErrorMessage,
+    capitalizeFirstLetter
 };
 
-console.log('✅ Validation Utilities loaded!');
+// Only log in development mode
+if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    console.log('✅ Validation Utilities loaded!');
+}
