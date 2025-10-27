@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sample Data Manager - NGO Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .card {
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn {
+            transition: all 0.2s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .log-entry {
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="p-6">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800 flex items-center gap-3">
+                        <i class="fas fa-database text-purple-600"></i>
+                        Sample Data Manager
+                    </h1>
+                    <p class="text-gray-600 mt-2">Test verileri oluştur, yönet ve sistemini test et</p>
+                </div>
+                <a href="dashboard.html" class="btn bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Dashboard'a Dön
+                </a>
+            </div>
+        </div>
+
+        <!-- Action Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <!-- Generate Data Card -->
+            <div class="card bg-white rounded-lg shadow-lg p-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="bg-green-100 p-3 rounded-full">
+                        <i class="fas fa-plus-circle text-green-600 text-2xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800">Örnek Veri Oluştur</h2>
+                        <p class="text-gray-600 text-sm">Tüm modüller için test verileri</p>
+                    </div>
+                </div>
+                
+                <div class="space-y-3 mb-4">
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600">👥 Kullanıcılar</span>
+                        <span class="font-semibold text-gray-800">4 adet</span>
+                    </div>
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600">🏢 Tesisler</span>
+                        <span class="font-semibold text-gray-800">5 adet</span>
+                    </div>
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600">📊 Projeler</span>
+                        <span class="font-semibold text-gray-800">4 adet</span>
+                    </div>
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600">💰 İşlemler</span>
+                        <span class="font-semibold text-gray-800">8 adet</span>
+                    </div>
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600">🐑 Kurbanlar</span>
+                        <span class="font-semibold text-gray-800">3 adet</span>
+                    </div>
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600">👨‍💼 Personel</span>
+                        <span class="font-semibold text-gray-800">5 adet</span>
+                    </div>
+                </div>
+
+                <button onclick="generateAllData()" 
+                        class="btn w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700"
+                        id="generateBtn">
+                    <i class="fas fa-magic mr-2"></i>
+                    Tüm Verileri Oluştur
+                </button>
+            </div>
+
+            <!-- Clear Data Card -->
+            <div class="card bg-white rounded-lg shadow-lg p-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="bg-red-100 p-3 rounded-full">
+                        <i class="fas fa-trash-alt text-red-600 text-2xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800">Verileri Temizle</h2>
+                        <p class="text-gray-600 text-sm">Tüm test verilerini sil</p>
+                    </div>
+                </div>
+                
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                    <div class="flex items-start gap-2">
+                        <i class="fas fa-exclamation-triangle text-yellow-600 mt-1"></i>
+                        <div class="text-sm text-yellow-800">
+                            <p class="font-semibold mb-1">⚠️ Dikkat!</p>
+                            <p>Bu işlem tüm test verilerini silecektir. Bu işlem geri alınamaz.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="confirmClearData()" 
+                        class="btn w-full bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700"
+                        id="clearBtn">
+                    <i class="fas fa-exclamation-circle mr-2"></i>
+                    Tüm Verileri Temizle
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Card -->
+        <div class="card bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <i class="fas fa-list text-purple-600"></i>
+                İşlem Sonuçları
+            </h2>
+            
+            <div id="resultsContainer" class="space-y-2">
+                <div class="text-center text-gray-400 py-8">
+                    <i class="fas fa-info-circle text-4xl mb-3"></i>
+                    <p>Henüz işlem yapılmadı</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Card -->
+        <div class="card bg-white rounded-lg shadow-lg p-6 mt-6" id="statsCard" style="display: none;">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <i class="fas fa-chart-bar text-purple-600"></i>
+                İstatistikler
+            </h2>
+            
+            <div id="statsContainer" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <!-- Stats will be populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/validation.js"></script>
+    <script src="js/error-handler.js"></script>
+    <script src="js/toast.js"></script>
+    <script src="js/approval-workflow.js"></script>
+    <script src="js/sample-data.js"></script>
+
+    <script>
+        // Initialize toast manager
+        const toastManager = new ToastManager();
+        window.ToastManager = toastManager;
+
+        // Generate all sample data
+        async function generateAllData() {
+            const btn = document.getElementById('generateBtn');
+            const container = document.getElementById('resultsContainer');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Oluşturuluyor...';
+            container.innerHTML = '<div class="text-center text-gray-600 py-4"><i class="fas fa-spinner fa-spin mr-2"></i> Veriler oluşturuluyor...</div>';
+            
+            try {
+                const results = await SampleDataGenerator.generateAllData();
+                displayResults(results);
+                toastManager.show('Tüm veriler başarıyla oluşturuldu!', 'success');
+            } catch (error) {
+                console.error('Veri oluşturma hatası:', error);
+                container.innerHTML = `
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
+                        <i class="fas fa-times-circle mr-2"></i>
+                        Hata: ${error.message}
+                    </div>
+                `;
+                toastManager.show('Veri oluşturma başarısız!', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-magic mr-2"></i> Tüm Verileri Oluştur';
+            }
+        }
+
+        // Clear all sample data
+        async function confirmClearData() {
+            if (!confirm('⚠️ TÜM TEST VERİLERİ SİLİNECEK!\n\nBu işlem geri alınamaz. Devam etmek istiyor musunuz?')) {
+                return;
+            }
+
+            const btn = document.getElementById('clearBtn');
+            const container = document.getElementById('resultsContainer');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Siliniyor...';
+            container.innerHTML = '<div class="text-center text-gray-600 py-4"><i class="fas fa-spinner fa-spin mr-2"></i> Veriler siliniyor...</div>';
+            
+            try {
+                const results = await SampleDataGenerator.clearAllData();
+                displayClearResults(results);
+                toastManager.show('Tüm veriler temizlendi', 'success');
+            } catch (error) {
+                console.error('Veri temizleme hatası:', error);
+                container.innerHTML = `
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
+                        <i class="fas fa-times-circle mr-2"></i>
+                        Hata: ${error.message}
+                    </div>
+                `;
+                toastManager.show('Veri temizleme başarısız!', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-exclamation-circle mr-2"></i> Tüm Verileri Temizle';
+            }
+        }
+
+        // Display generation results
+        function displayResults(results) {
+            const container = document.getElementById('resultsContainer');
+            const statsCard = document.getElementById('statsCard');
+            const statsContainer = document.getElementById('statsContainer');
+            
+            let html = '';
+            let totalSuccess = 0;
+            let totalFailed = 0;
+
+            const modules = [
+                { key: 'users', icon: 'fa-users', label: 'Kullanıcılar', color: 'blue' },
+                { key: 'facilities', icon: 'fa-building', label: 'Tesisler', color: 'green' },
+                { key: 'projects', icon: 'fa-project-diagram', label: 'Projeler', color: 'purple' },
+                { key: 'transactions', icon: 'fa-money-bill', label: 'İşlemler', color: 'yellow' },
+                { key: 'sacrifices', icon: 'fa-mosque', label: 'Kurbanlar', color: 'red' },
+                { key: 'personnel', icon: 'fa-user-tie', label: 'Personel', color: 'indigo' }
+            ];
+
+            modules.forEach(module => {
+                const result = results[module.key];
+                const success = result.success || 0;
+                const failed = result.failed || 0;
+                totalSuccess += success;
+                totalFailed += failed;
+
+                html += `
+                    <div class="log-entry bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <i class="fas ${module.icon} text-${module.color}-600 text-xl"></i>
+                                <span class="font-semibold text-gray-800">${module.label}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                ${success > 0 ? `<span class="status-badge status-success">${success} başarılı</span>` : ''}
+                                ${failed > 0 ? `<span class="status-badge status-failed">${failed} başarısız</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Add to stats
+                statsContainer.innerHTML += `
+                    <div class="bg-${module.color}-50 border border-${module.color}-200 rounded-lg p-4 text-center">
+                        <i class="fas ${module.icon} text-${module.color}-600 text-2xl mb-2"></i>
+                        <div class="font-bold text-2xl text-gray-800">${success}</div>
+                        <div class="text-sm text-gray-600">${module.label}</div>
+                    </div>
+                `;
+            });
+
+            // Summary
+            html += `
+                <div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4 border-2 border-purple-200 mt-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-chart-pie text-purple-600 text-xl"></i>
+                            <span class="font-bold text-gray-800">Toplam</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="status-badge status-success">${totalSuccess} başarılı</span>
+                            ${totalFailed > 0 ? `<span class="status-badge status-failed">${totalFailed} başarısız</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = html;
+            statsCard.style.display = 'block';
+        }
+
+        // Display clear results
+        function displayClearResults(results) {
+            const container = document.getElementById('resultsContainer');
+            
+            let html = `
+                <div class="bg-green-50 border border-green-200 rounded-lg p-4 text-green-800">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    Tüm test verileri başarıyla temizlendi!
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        // Log loaded
+        console.log('✅ Sample Data Manager loaded!');
+    </script>
+</body>
+</html>

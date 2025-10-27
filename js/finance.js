@@ -1,70 +1,123 @@
 // FİNANS MODÜLÜ - Gelir/Gider/Rapor İşlemleri
+// Enhanced with approval workflow and error handling
 
 // YENİ GELİR EKLE
 async function addIncome(data) {
-    const { error } = await supabase.from('transactions').insert([{
-        type: 'income',
-        title: data.title,
-        amount: parseFloat(data.amount),
-        category: data.category,
-        payment_method: data.paymentMethod || 'bank_transfer',
-        transaction_date: data.date || new Date().toISOString().split('T')[0],
-        status: 'approved',
-        notes: data.notes || ''
-    }]);
+    try {
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        const { error } = await supabase.from('transactions').insert([{
+            type: 'income',
+            title: data.title,
+            amount: parseFloat(data.amount),
+            category: data.category,
+            payment_method: data.paymentMethod || 'bank_transfer',
+            transaction_date: data.date || new Date().toISOString().split('T')[0],
+            status: 'approved', // Gelirler otomatik onaylı
+            notes: data.notes || '',
+            created_by: user?.id || null
+        }]);
 
-    if (error) {
+        if (error) {
+            console.error('Gelir ekleme hatası:', error);
+            window.ErrorHandler?.handleAPIError(error, 'addIncome');
+            return { success: false, error };
+        }
+
+        window.ToastManager?.show('Gelir kaydı başarıyla eklendi', 'success');
+        
+        // Log audit event
+        if (window.ApprovalWorkflow) {
+            await window.ApprovalWorkflow.logAuditEvent('CREATE_INCOME', 'transaction', null, {
+                title: data.title,
+                amount: data.amount
+            });
+        }
+        
+        return { success: true };
+        
+    } catch (error) {
         console.error('Gelir ekleme hatası:', error);
+        window.ErrorHandler?.handleAPIError(error, 'addIncome');
         return { success: false, error };
     }
-
-    return { success: true };
 }
 
 // YENİ GİDER EKLE
 async function addExpense(data) {
-    const { error } = await supabase.from('transactions').insert([{
-        type: 'expense',
-        title: data.title,
-        amount: parseFloat(data.amount),
-        category: data.category,
-        facility_id: data.facilityId || null,
-        payment_method: data.paymentMethod || 'bank_transfer',
-        transaction_date: data.date || new Date().toISOString().split('T')[0],
-        status: 'pending',
-        notes: data.notes || ''
-    }]);
+    try {
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        const { error } = await supabase.from('transactions').insert([{
+            type: 'expense',
+            title: data.title,
+            amount: parseFloat(data.amount),
+            category: data.category,
+            facility_id: data.facilityId || null,
+            payment_method: data.paymentMethod || 'bank_transfer',
+            transaction_date: data.date || new Date().toISOString().split('T')[0],
+            status: 'pending', // Giderler onay bekler
+            notes: data.notes || '',
+            created_by: user?.id || null
+        }]);
 
-    if (error) {
+        if (error) {
+            console.error('Gider ekleme hatası:', error);
+            window.ErrorHandler?.handleAPIError(error, 'addExpense');
+            return { success: false, error };
+        }
+
+        window.ToastManager?.show('Gider kaydı oluşturuldu, onay bekleniyor', 'info');
+        
+        // Log audit event
+        if (window.ApprovalWorkflow) {
+            await window.ApprovalWorkflow.logAuditEvent('CREATE_EXPENSE', 'transaction', null, {
+                title: data.title,
+                amount: data.amount
+            });
+        }
+        
+        return { success: true };
+        
+    } catch (error) {
         console.error('Gider ekleme hatası:', error);
+        window.ErrorHandler?.handleAPIError(error, 'addExpense');
         return { success: false, error };
     }
-
-    return { success: true };
 }
 
 // TÜM İŞLEMLERİ ÇEKME
 async function getTransactions(filters = {}) {
-    let query = supabase
-        .from('transactions')
-        .select('*')
-        .order('transaction_date', { ascending: false });
+    try {
+        let query = supabase
+            .from('transactions')
+            .select('*, facilities(name), created_by_user:users!created_by(full_name), approved_by_user:users!approved_by(full_name)')
+            .order('transaction_date', { ascending: false });
 
-    if (filters.type) query = query.eq('type', filters.type);
-    if (filters.status) query = query.eq('status', filters.status);
-    if (filters.category) query = query.eq('category', filters.category);
-    if (filters.facilityId) query = query.eq('facility_id', filters.facilityId);
-    if (filters.startDate) query = query.gte('transaction_date', filters.startDate);
-    if (filters.endDate) query = query.lte('transaction_date', filters.endDate);
+        if (filters.type) query = query.eq('type', filters.type);
+        if (filters.status) query = query.eq('status', filters.status);
+        if (filters.category) query = query.eq('category', filters.category);
+        if (filters.facilityId) query = query.eq('facility_id', filters.facilityId);
+        if (filters.startDate) query = query.gte('transaction_date', filters.startDate);
+        if (filters.endDate) query = query.lte('transaction_date', filters.endDate);
 
-    const { data, error } = await query;
+        const { data, error } = await query;
 
-    if (error) {
+        if (error) {
+            console.error('İşlem çekme hatası:', error);
+            window.ErrorHandler?.handleAPIError(error, 'getTransactions');
+            return [];
+        }
+
+        return data || [];
+        
+    } catch (error) {
         console.error('İşlem çekme hatası:', error);
+        window.ErrorHandler?.handleAPIError(error, 'getTransactions');
         return [];
     }
-
-    return data || [];
 }
 
 // İSTATİSTİKLER HESAPLA
@@ -103,22 +156,62 @@ async function getFinanceStats(filters = {}) {
 
 // İŞLEM SİLME
 async function deleteTransaction(id) {
-    const { error } = await supabase
-        .from('transactions')
-        .delete()
-        .eq('id', id);
+    try {
+        if (!window.ValidationUtils?.isValidUUID(id)) {
+            throw new Error('Geçersiz işlem ID');
+        }
+        
+        const { error } = await supabase
+            .from('transactions')
+            .delete()
+            .eq('id', id);
 
-    return !error;
+        if (error) throw error;
+        
+        window.ToastManager?.show('İşlem başarıyla silindi', 'success');
+        
+        // Log audit event
+        if (window.ApprovalWorkflow) {
+            await window.ApprovalWorkflow.logAuditEvent('DELETE_TRANSACTION', 'transaction', id);
+        }
+        
+        return { success: true };
+        
+    } catch (error) {
+        console.error('İşlem silme hatası:', error);
+        window.ErrorHandler?.handleAPIError(error, 'deleteTransaction');
+        return { success: false, error };
+    }
 }
 
 // İŞLEM GÜNCELLEME
 async function updateTransactionStatus(id, status) {
-    const { error } = await supabase
-        .from('transactions')
-        .update({ status: status })
-        .eq('id', id);
+    try {
+        if (!window.ValidationUtils?.isValidUUID(id)) {
+            throw new Error('Geçersiz işlem ID');
+        }
+        
+        const { error } = await supabase
+            .from('transactions')
+            .update({ status: status })
+            .eq('id', id);
 
-    return !error;
+        if (error) throw error;
+        
+        window.ToastManager?.show('İşlem durumu güncellendi', 'success');
+        
+        // Log audit event
+        if (window.ApprovalWorkflow) {
+            await window.ApprovalWorkflow.logAuditEvent('UPDATE_TRANSACTION_STATUS', 'transaction', id, { status });
+        }
+        
+        return { success: true };
+        
+    } catch (error) {
+        console.error('İşlem güncelleme hatası:', error);
+        window.ErrorHandler?.handleAPIError(error, 'updateTransactionStatus');
+        return { success: false, error };
+    }
 }
 
 // EXCEL EXPORT
