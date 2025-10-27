@@ -22,19 +22,13 @@ async function initializePage() {
         const urlParams = new URLSearchParams(window.location.search);
         const facilityId = urlParams.get('id');
 
-        // Validate facility ID: check for null, undefined, empty, or invalid strings
-        if (!facilityId || facilityId === 'null' || facilityId === 'undefined' || facilityId.trim() === '') {
-            ToastManager.error('Tesis ID bulunamadı! Lütfen dashboard üzerinden bir tesis seçin.');
-            setTimeout(() => {
-                window.location.href = 'dashboard.html';
-            }, 2000);
-            return;
-        }
-
-        // Validate UUID format (basic check)
-        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-        if (!uuidRegex.test(facilityId)) {
-            ToastManager.error('Geçersiz tesis ID formatı! Lütfen dashboard üzerinden bir tesis seçin.');
+        // Validate facility ID using shared validation utility
+        if (!window.ValidationUtils || !window.ValidationUtils.isValidFacilityId(facilityId)) {
+            const errorMsg = window.ValidationUtils 
+                ? window.ValidationUtils.getInvalidIdErrorMessage('tesis', facilityId)
+                : 'Tesis ID bulunamadı! Lütfen dashboard üzerinden bir tesis seçin.';
+            
+            ToastManager.error(errorMsg);
             setTimeout(() => {
                 window.location.href = 'dashboard.html';
             }, 2000);
