@@ -6,6 +6,27 @@ let currentProjectTab = 'overview';
 // Proje detayını yükle
 async function loadProjectDetail(projectId) {
     try {
+        // Check auth
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+            window.location.href = 'login.html';
+            return;
+        }
+
+        // Initialize RBAC if not already initialized
+        if (window.RBACModule) {
+            await window.RBACModule.init(session.user);
+            
+            // Check if user has access to this project
+            if (!window.RBACModule.hasAccessToProject(projectId)) {
+                if (typeof showToast === 'function') {
+                    showToast('Bu projeye erişim yetkiniz yok!', 'error');
+                }
+                window.RBACModule.redirectUnauthorized();
+                return;
+            }
+        }
+
         // Proje bilgilerini çek
         const { data: project, error } = await supabase
             .from('projects')

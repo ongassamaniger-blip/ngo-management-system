@@ -24,8 +24,30 @@ async function initializePage() {
 
         if (!facilityId) {
             ToastManager.error('Tesis ID bulunamadı!');
-            
+            setTimeout(() => {
+                window.location.href = 'dashboard.html';
+            }, 2000);
             return;
+        }
+
+        // Initialize RBAC
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+            window.location.href = 'login.html';
+            return;
+        }
+
+        if (window.RBACModule) {
+            await window.RBACModule.init(session.user);
+            
+            // Check if user has access to this facility
+            if (!window.RBACModule.hasAccessToFacility(facilityId)) {
+                if (typeof showToast === 'function') {
+                    showToast('Bu tesise erişim yetkiniz yok!', 'error');
+                }
+                window.RBACModule.redirectUnauthorized();
+                return;
+            }
         }
 
         await loadFacilityDetail(facilityId);
