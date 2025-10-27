@@ -606,11 +606,19 @@ function getRoleTextForTable(role) {
 
 // Tesis detayını göster
 window.viewFacilityDetail = function(facilityId) {
+    if (!facilityId) {
+        showToast('Tesis ID bulunamadı!', 'error');
+        return;
+    }
     window.location.href = `facility-detail.html?id=${facilityId}`;
 };
 
 // Proje detayını göster
 window.viewProjectDetail = function(projectId) {
+    if (!projectId) {
+        showToast('Proje ID bulunamadı!', 'error');
+        return;
+    }
     window.location.href = `project-detail.html?id=${projectId}`;
 };
 
