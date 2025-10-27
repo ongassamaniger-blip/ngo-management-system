@@ -19,10 +19,15 @@ async function initDashboard() {
             return;
         }
 
+        // Initialize RBAC module
+        if (window.RBACModule) {
+            await window.RBACModule.init(session.user);
+        }
+
         // Kullanıcı bilgilerini yükle
         await loadUserInfo(session.user);
 
-        // Verileri yükle
+        // Verileri yükle (with RBAC filtering)
         await loadAllData();
 
         // Temayı başlat
@@ -171,10 +176,15 @@ function createTransactionCard(t) {
 
 // Tesisler
 async function loadFacilities() {
-    const facilities = await window.FacilityModule.getFacilities();
+    let facilities = await window.FacilityModule.getFacilities();
     const container = document.getElementById('facilitiesList');
     
     if (!container) return;
+    
+    // Apply RBAC filtering
+    if (window.RBACModule) {
+        facilities = window.RBACModule.filterByAccess(facilities, 'facility');
+    }
     
     if (!facilities || facilities.length === 0) {
         container.innerHTML = '<p class="text-gray-500 col-span-3 text-center py-8">Henüz tesis yok</p>';
@@ -201,10 +211,15 @@ async function loadFacilities() {
 
 // Projeler
 async function loadProjects() {
-    const projects = await window.ProjectModule.getProjects();
+    let projects = await window.ProjectModule.getProjects();
     const container = document.getElementById('projectsList');
     
     if (!container) return;
+    
+    // Apply RBAC filtering
+    if (window.RBACModule) {
+        projects = window.RBACModule.filterByAccess(projects, 'project');
+    }
     
     if (!projects || projects.length === 0) {
         container.innerHTML = '<p class="text-gray-500 text-center py-8">Henüz proje yok</p>';
