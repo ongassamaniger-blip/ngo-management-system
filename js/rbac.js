@@ -347,8 +347,8 @@ const RBACModule = (function() {
      * Show unauthorized message
      */
     function showUnauthorized() {
-        if (typeof showToast === 'function') {
-            showToast('Bu işlem için yetkiniz yok!', 'error');
+        if (typeof ToastManager !== 'undefined') {
+            ToastManager.error('Bu işlem için yetkiniz yok!');
         } else {
             alert('Bu işlem için yetkiniz yok!');
         }

@@ -337,14 +337,14 @@ window.selectLanguage = function(lang) {
     const menu = document.getElementById('languageMenu');
     if (menu) menu.remove();
     
-    if (window.showToast) {
+    if (window.ToastManager) {
         const langNames = {
             'tr': 'Türkçe',
             'en': 'English',
             'ar': 'العربية',
             'fr': 'Français'
         };
-        showToast(`${langNames[lang]} seçildi`, 'success');
+        ToastManager.success(`${langNames[lang]} seçildi`);
     }
 };
 
