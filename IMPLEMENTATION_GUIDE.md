@@ -186,7 +186,11 @@ VALUES (
 2. **Dashboard**: Should see ONLY assigned facility
 3. **Tesisler**: Should see ONLY assigned facility
 4. **Click** assigned facility: Should access successfully
-5. **Manually** navigate to another facility (change URL ID): Should redirect with error "Bu tesise erişim yetkiniz yok!"
+5. **Test unauthorized access**: 
+   - Get URL of another facility from dashboard (or use browser history)
+   - Example: `facility-detail.html?id=DIFFERENT_FACILITY_UUID`
+   - Navigate to that URL
+   - Should immediately redirect to dashboard with error: "Bu tesise erişim yetkiniz yok!"
 6. **Result**: ✅ Facility manager can only access assigned facility
 
 ### Test 3: Project Manager Access (Should Restrict)
@@ -194,7 +198,11 @@ VALUES (
 2. **Dashboard**: Should see ONLY assigned project
 3. **Projeler**: Should see ONLY assigned project
 4. **Click** assigned project: Should access successfully
-5. **Manually** navigate to another project (change URL ID): Should redirect with error "Bu projeye erişim yetkiniz yok!"
+5. **Test unauthorized access**:
+   - Get URL of another project from dashboard
+   - Example: `project-detail.html?id=DIFFERENT_PROJECT_UUID`
+   - Navigate to that URL
+   - Should immediately redirect to dashboard with error: "Bu projeye erişim yetkiniz yok!"
 6. **Result**: ✅ Project manager can only access assigned project
 
 ### Test 4: Finance Manager Access (Should See All)
