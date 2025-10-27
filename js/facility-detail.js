@@ -47,9 +47,7 @@ async function initializePage() {
             
             // Check if user has access to this facility
             if (!window.RBACModule.hasAccessToFacility(facilityId)) {
-                if (typeof showToast === 'function') {
-                    showToast('Bu tesise erişim yetkiniz yok!', 'error');
-                }
+                ToastManager.error('Bu tesise erişim yetkiniz yok!');
                 window.RBACModule.redirectUnauthorized();
                 return;
             }

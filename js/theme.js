@@ -24,7 +24,7 @@ function toggleTheme() {
     const newTheme = currentTheme === 'light' ? 'dark' : 'light';
     applyTheme(newTheme);
     updateThemeButton(newTheme);
-    showToast(`${newTheme === 'dark' ? '🌙 Dark' : '☀️ Light'} mode aktif`, 'success');
+    ToastManager.success(`${newTheme === 'dark' ? '🌙 Dark' : '☀️ Light'} mode aktif`);
 }
 
 // Tema butonunu güncelle

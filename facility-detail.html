@@ -651,9 +651,7 @@
     <script>
         // Rapor export
         function exportFacilityReport() {
-            if (typeof showToast === 'function') {
-                showToast('Rapor hazırlanıyor...', 'info');
-            }
+            ToastManager.info('Rapor hazırlanıyor...');
             // TODO: PDF export
         }
 
@@ -664,11 +662,7 @@
             const facilityId = urlParams.get('id');
 
             if (!facilityId) {
-                if (typeof showToast === 'function') {
-                    showToast('Tesis bulunamadı!', 'error');
-                } else {
-                    alert('Tesis bulunamadı!');
-                }
+                ToastManager.error('Tesis bulunamadı!');
                 setTimeout(() => {
                     window.location.href = 'dashboard.html';
                 }, 2000);
@@ -680,9 +674,7 @@
                 await window.FacilityDetailModule.loadFacilityDetail(facilityId);
             } else {
                 console.error('FacilityDetailModule not loaded');
-                if (typeof showToast === 'function') {
-                    showToast('Modül yüklenemedi, lütfen sayfayı yenileyin', 'error');
-                }
+                ToastManager.error('Modül yüklenemedi, lütfen sayfayı yenileyin');
             }
         });
     </script>

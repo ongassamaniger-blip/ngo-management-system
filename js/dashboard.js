@@ -45,7 +45,7 @@ async function initDashboard() {
         
     } catch (error) {
         console.error('Dashboard yükleme hatası:', error);
-        showToast('Bir hata oluştu, lütfen sayfayı yenileyin', 'error');
+        ToastManager.error('Bir hata oluştu, lütfen sayfayı yenileyin');
     } finally {
         // Loading gizle
         setTimeout(() => {
@@ -423,12 +423,12 @@ function setupFormHandlers() {
             });
 
             if (result.success) {
-                showToast('Gelir başarıyla kaydedildi!', 'success');
+                ToastManager.success('Gelir başarıyla kaydedildi!');
                 closeModal('incomeModal');
                 incomeForm.reset();
                 await loadAllData();
             } else {
-                showToast('Hata oluştu: ' + (result.error?.message || 'Bilinmeyen hata'), 'error');
+                ToastManager.error('Hata oluştu: ' + (result.error?.message || 'Bilinmeyen hata'));
             }
         });
     }
@@ -446,12 +446,12 @@ function setupFormHandlers() {
             });
 
             if (result.success) {
-                showToast('Gider başarıyla kaydedildi!', 'success');
+                ToastManager.success('Gider başarıyla kaydedildi!');
                 closeModal('expenseModal');
                 expenseForm.reset();
                 await loadAllData();
             } else {
-                showToast('Hata oluştu: ' + (result.error?.message || 'Bilinmeyen hata'), 'error');
+                ToastManager.error('Hata oluştu: ' + (result.error?.message || 'Bilinmeyen hata'));
             }
         });
     }
@@ -472,12 +472,12 @@ function setupFormHandlers() {
             });
 
             if (result.success) {
-                showToast('Proje başarıyla oluşturuldu!', 'success');
+                ToastManager.success('Proje başarıyla oluşturuldu!');
                 closeModal('projectModal');
                 projectForm.reset();
                 await loadAllData();
             } else {
-                showToast('Hata oluştu: ' + (result.error?.message || 'Bilinmeyen hata'), 'error');
+                ToastManager.error('Hata oluştu: ' + (result.error?.message || 'Bilinmeyen hata'));
             }
         });
     }
@@ -500,12 +500,12 @@ function setupFormHandlers() {
             });
 
             if (result.success) {
-                showToast('Kurban kaydı başarıyla oluşturuldu!', 'success');
+                ToastManager.success('Kurban kaydı başarıyla oluşturuldu!');
                 closeModal('sacrificeModal');
                 sacrificeForm.reset();
                 await loadAllData();
             } else {
-                showToast('Hata oluştu: ' + (result.error?.message || 'Bilinmeyen hata'), 'error');
+                ToastManager.error('Hata oluştu: ' + (result.error?.message || 'Bilinmeyen hata'));
             }
         });
     }
@@ -526,12 +526,12 @@ function setupFormHandlers() {
             });
 
             if (result.success) {
-                showToast('Kullanıcı başarıyla eklendi!', 'success');
+                ToastManager.success('Kullanıcı başarıyla eklendi!');
                 closeModal('newUserModal');
                 newUserForm.reset();
                 loadAyarlarUsersData();
             } else {
-                showToast('Kullanıcı eklenemedi: ' + (result.error.message || 'Bilinmeyen hata'), 'error');
+                ToastManager.error('Kullanıcı eklenemedi: ' + (result.error.message || 'Bilinmeyen hata'));
             }
         });
     }
@@ -645,21 +645,21 @@ window.viewFacilityDetail = function(facilityId) {
     if (window.ValidationUtils) {
         if (!window.ValidationUtils.isValidFacilityId(facilityId)) {
             const errorMsg = window.ValidationUtils.getInvalidIdErrorMessage('tesis', facilityId);
-            showToast(errorMsg, 'error');
+            ToastManager.error(errorMsg);
             console.error('Invalid facility ID:', facilityId);
             return;
         }
     } else {
         // Fallback validation if ValidationUtils not loaded
         if (!facilityId || facilityId === 'null' || facilityId === 'undefined' || String(facilityId).trim() === '') {
-            showToast('Geçersiz tesis ID! Lütfen tekrar deneyin.', 'error');
+            ToastManager.error('Geçersiz tesis ID! Lütfen tekrar deneyin.');
             console.error('Invalid facility ID:', facilityId);
             return;
         }
         
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         if (!uuidRegex.test(facilityId)) {
-            showToast('Geçersiz tesis ID formatı!', 'error');
+            ToastManager.error('Geçersiz tesis ID formatı!');
             console.error('Invalid UUID format for facility ID:', facilityId);
             return;
         }
@@ -671,7 +671,7 @@ window.viewFacilityDetail = function(facilityId) {
 // Proje detayını göster
 window.viewProjectDetail = function(projectId) {
     if (!projectId) {
-        showToast('Proje ID bulunamadı!', 'error');
+        ToastManager.error('Proje ID bulunamadı!');
         return;
     }
     window.location.href = `project-detail.html?id=${projectId}`;
@@ -785,12 +785,12 @@ window.exportReport = async function() {
     const transactions = await window.FinanceModule.getTransactions(currentFilters);
     
     if (!transactions || transactions.length === 0) {
-        showToast('Export edilecek veri yok', 'error');
+        ToastManager.error('Export edilecek veri yok');
         return;
     }
 
     window.FinanceModule.exportToCSV(transactions);
-    showToast('Rapor indiriliyor...', 'success');
+    ToastManager.success('Rapor indiriliyor...');
 };
 
 // PDF raporu indir
@@ -798,18 +798,18 @@ window.exportPDF = async function() {
     const transactions = await window.FinanceModule.getTransactions(currentFilters);
     
     if (!transactions || transactions.length === 0) {
-        showToast('Export edilecek veri yok', 'error');
+        ToastManager.error('Export edilecek veri yok');
         return;
     }
 
-    showToast('PDF oluşturuluyor...', 'info');
+    ToastManager.info('PDF oluşturuluyor...');
     
     try {
         await window.PDFModule.generatePDFReport(currentFilters);
-        showToast('PDF başarıyla indirildi!', 'success');
+        ToastManager.success('PDF başarıyla indirildi!');
     } catch (error) {
         console.error('PDF oluşturma hatası:', error);
-        showToast('PDF oluşturulurken hata oluştu', 'error');
+        ToastManager.error('PDF oluşturulurken hata oluştu');
     }
 };
 
@@ -935,7 +935,7 @@ window.markAllAsRead = async function() {
         .eq('is_read', false);
 
     await loadNotifications();
-    showToast('Tüm bildirimler okundu işaretlendi', 'success');
+    ToastManager.success('Tüm bildirimler okundu işaretlendi');
 };
 
 // Bildirim ikonu
@@ -1041,7 +1041,7 @@ function showSearchResults(transactions, facilities, projects) {
     const totalResults = transactions.length + facilities.length + projects.length;
 
     if (totalResults === 0) {
-        showToast('Sonuç bulunamadı', 'info');
+        ToastManager.info('Sonuç bulunamadı');
         return;
     }
 
@@ -1050,7 +1050,7 @@ function showSearchResults(transactions, facilities, projects) {
     if (facilities.length > 0) message += `${facilities.length} tesis `;
     if (projects.length > 0) message += `${projects.length} proje`;
 
-    showToast(message, 'success');
+    ToastManager.success(message);
 }
 
 // ==================== KLAVYE KISAYOLLARI ====================
@@ -1120,10 +1120,10 @@ function setupAyarlarHandlers() {
             });
 
             if (result.success) {
-                showToast('Profil başarıyla güncellendi!', 'success');
+                ToastManager.success('Profil başarıyla güncellendi!');
                 await loadAyarlarData();
             } else {
-                showToast('Profil güncellenemedi!', 'error');
+                ToastManager.error('Profil güncellenemedi!');
             }
         });
     }
@@ -1258,15 +1258,15 @@ async function deleteUserAction(userId) {
     const result = await window.ProfileModule.deleteUser(userId);
     
     if (result.success) {
-        showToast('Kullanıcı başarıyla silindi!', 'success');
+        ToastManager.success('Kullanıcı başarıyla silindi!');
         await loadAyarlarUsersData();
     } else {
-        showToast('Kullanıcı silinemedi!', 'error');
+        ToastManager.error('Kullanıcı silinemedi!');
     }
 }
 
 // Yeni Tesis Modal'ını Aç
 window.openNewFacilityModal = function() {
-    showToast('Yeni tesis ekleme formu açılacak', 'info');
+    ToastManager.info('Yeni tesis ekleme formu açılacak');
     // Modal kodunu buraya ekleyebilirsin
 };

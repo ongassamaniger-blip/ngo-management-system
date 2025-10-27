@@ -371,7 +371,7 @@ function getFormTemplates() {
 // Form kaydet (Supabase)
 window.saveFormToDatabase = async function() {
     if (formFields.length === 0) {
-        showToast('Form boş! Lütfen alan ekleyin.', 'error');
+        ToastManager.error('Form boş! Lütfen alan ekleyin.');
         return;
     }
 
@@ -392,7 +392,7 @@ window.saveFormToDatabase = async function() {
 
         if (error) throw error;
 
-        showToast('Form başarıyla kaydedildi!', 'success');
+        ToastManager.success('Form başarıyla kaydedildi!');
         
     } catch (error) {
         console.error('Form kaydetme hatası:', error);
@@ -404,7 +404,7 @@ window.saveFormToDatabase = async function() {
             updated: new Date().toISOString()
         }));
         
-        showToast('Form LocalStorage\'a kaydedildi', 'info');
+        ToastManager.info('Form LocalStorage\'a kaydedildi');
     }
 };
 
@@ -441,7 +441,7 @@ window.downloadJSON = function() {
 window.copyToClipboard = function() {
     const code = document.getElementById('exportCode').textContent;
     navigator.clipboard.writeText(code).then(() => {
-        showToast('JSON kopyalandı!', 'success');
+        ToastManager.success('JSON kopyalandı!');
     });
 };
 

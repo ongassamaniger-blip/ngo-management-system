@@ -19,9 +19,7 @@ async function loadProjectDetail(projectId) {
             
             // Check if user has access to this project
             if (!window.RBACModule.hasAccessToProject(projectId)) {
-                if (typeof showToast === 'function') {
-                    showToast('Bu projeye erişim yetkiniz yok!', 'error');
-                }
+                ToastManager.error('Bu projeye erişim yetkiniz yok!');
                 window.RBACModule.redirectUnauthorized();
                 return;
             }
@@ -44,7 +42,7 @@ async function loadProjectDetail(projectId) {
         
     } catch (error) {
         console.error('Proje detay yükleme hatası:', error);
-        showToast('Proje bilgileri yüklenemedi', 'error');
+        ToastManager.error('Proje bilgileri yüklenemedi');
     }
 }
 
@@ -305,12 +303,12 @@ window.updateTaskStatus = async function(taskId, isCompleted) {
 
         if (error) throw error;
 
-        showToast('Görev durumu güncellendi', 'success');
+        ToastManager.success('Görev durumu güncellendi');
         await loadProjectDetail(currentProject.id);
         
     } catch (error) {
         console.error('Görev güncelleme hatası:', error);
-        showToast('Görev güncellenemedi', 'error');
+        ToastManager.error('Görev güncellenemedi');
     }
 };
 
