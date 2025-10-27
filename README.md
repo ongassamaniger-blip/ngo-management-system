@@ -34,6 +34,10 @@
 - 📱 **Fully Responsive** - Mobil uyumlu
 - 🔐 **Row Level Security** - Supabase RLS politikaları
 - ⚡ **Loading States** - Kullanıcı dostu animasyonlar
+- ✅ **Approval Workflow** - Onay akışı sistemi (NEW!)
+- 🔍 **Audit Logging** - Tüm işlemler kayıt altında (NEW!)
+- 🧪 **Sample Data Generator** - Test verileri oluşturma (NEW!)
+- 🛡️ **Comprehensive Error Handling** - Gelişmiş hata yönetimi (NEW!)
 
 ---
 
@@ -60,6 +64,41 @@ npx http-server -p 8000
 # 3. Tarayıcıda aç
 http://localhost:8000
 ```
+
+---
+
+## 🧪 Test & Development Tools
+
+### Sample Data Manager
+Sistem testi için örnek veriler oluşturmak için:
+
+1. `sample-data-manager.html` sayfasını aç
+2. "Tüm Verileri Oluştur" butonuna tıkla
+3. Otomatik olarak 29 örnek kayıt oluşturulur:
+   - 4 Kullanıcı (farklı roller)
+   - 5 Tesis (farklı kategoriler)
+   - 4 Proje (farklı durumlar)
+   - 8 Finans işlemi (gelir/gider)
+   - 3 Kurban kaydı
+   - 5 Personel kaydı
+
+### API Test Console
+Tarayıcı konsolundan modülleri test edebilirsiniz:
+
+```javascript
+// Bekleyen onayları listele
+const pending = await ApprovalWorkflow.getPendingApprovals();
+console.log('Pending:', pending);
+
+// İşlemi onayla
+await ApprovalWorkflow.approveTransaction(transactionId, 'Onaylandı');
+
+// Hata loglarını görüntüle
+const errors = window.ErrorHandler.getErrors();
+console.log('Errors:', errors);
+```
+
+Detaylı dokümantasyon için: [SYSTEM_CHECK_DOCUMENTATION.md](SYSTEM_CHECK_DOCUMENTATION.md)
 
 ---
 

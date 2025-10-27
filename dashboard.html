@@ -919,8 +919,12 @@
 	<!-- Scripts -->
 <script src="./js/config.js"></script>
 <script src="./js/validation.js"></script>  <!-- Validation utilities - Must load early -->
+<script src="./js/error-handler.js"></script>  <!-- Error handler - Load early -->
+<script src="./js/api.js"></script>  <!-- API module - Load before other modules -->
+<script src="./js/auth.js"></script>  <!-- Auth module - Load before other modules -->
 <script src="./js/rbac.js"></script>  <!-- 🔒 RBAC Module - Must load before other modules -->
 <script src="./js/toast.js"></script>  <!-- 🆕 YENİ - İLK SIRADA -->
+<script src="./js/approval-workflow.js"></script>  <!-- Approval workflow - Load before business modules -->
 <script src="./js/finance.js"></script>
 <script src="./js/modules.js"></script>
 <script src="./js/charts.js"></script>
