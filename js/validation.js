@@ -100,11 +100,11 @@ function filterValidEntities(entities, idField = 'id') {
 /**
  * Capitalizes the first letter of a string
  * @param {string} str - The string to capitalize
- * @returns {string} - Capitalized string
+ * @returns {string} - Capitalized string, or empty string if input is invalid
  */
 function capitalizeFirstLetter(str) {
     if (!str || typeof str !== 'string') {
-        return str;
+        return ''; // Return empty string for invalid inputs
     }
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
@@ -148,7 +148,17 @@ window.ValidationUtils = {
     capitalizeFirstLetter
 };
 
-// Only log in development mode
-if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+// Only log in development mode - check multiple indicators
+const isDevelopment = (
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname.startsWith('192.168.') ||
+    window.location.hostname.startsWith('10.') ||
+    window.location.port !== '' ||
+    window.location.protocol === 'file:' ||
+    (typeof window.DEBUG !== 'undefined' && window.DEBUG === true)
+);
+
+if (isDevelopment) {
     console.log('✅ Validation Utilities loaded!');
 }
