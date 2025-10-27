@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yönetici Atama - NGO System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen p-8">
+        <div class="max-w-6xl mx-auto">
+            <!-- Header -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-800">
+                            <i class="fas fa-users-cog text-purple-600 mr-3"></i>
+                            Yönetici Atama Sistemi
+                        </h1>
+                        <p class="text-gray-600 mt-2">Tesislere ve projelere yönetici atayın</p>
+                    </div>
+                    <button onclick="window.location.href='dashboard.html'" class="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">
+                        <i class="fas fa-arrow-left mr-2"></i>Dashboard'a Dön
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex space-x-2 mb-6">
+                <button onclick="showTab('facilities')" class="tab-btn active px-6 py-3 bg-white rounded-lg font-semibold shadow">
+                    <i class="fas fa-building mr-2"></i>Tesis Yöneticileri
+                </button>
+                <button onclick="showTab('projects')" class="tab-btn px-6 py-3 bg-white rounded-lg font-semibold shadow">
+                    <i class="fas fa-project-diagram mr-2"></i>Proje Yöneticileri
+                </button>
+            </div>
+
+            <!-- Facility Managers Tab -->
+            <div id="facilities-tab" class="tab-content">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Assign New Facility Manager -->
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4">
+                            <i class="fas fa-plus-circle text-green-600 mr-2"></i>
+                            Yeni Tesis Yöneticisi Ata
+                        </h2>
+                        <form id="assignFacilityForm" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Kullanıcı</label>
+                                <select id="facilityUserId" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" required>
+                                    <option value="">Kullanıcı seçin...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Tesis</label>
+                                <select id="facilityId" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" required>
+                                    <option value="">Tesis seçin...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Rol</label>
+                                <select id="facilityRole" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" required>
+                                    <option value="facility_manager">Tesis Yöneticisi</option>
+                                    <option value="facility_viewer">Tesis Görüntüleyici</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold">
+                                <i class="fas fa-save mr-2"></i>Ata
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Current Facility Assignments -->
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4">
+                            <i class="fas fa-list text-blue-600 mr-2"></i>
+                            Mevcut Atamalar
+                        </h2>
+                        <div id="facilityAssignments" class="space-y-3 max-h-96 overflow-y-auto">
+                            <p class="text-gray-500 text-center py-8">Yükleniyor...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Project Managers Tab -->
+            <div id="projects-tab" class="tab-content hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Assign New Project Manager -->
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4">
+                            <i class="fas fa-plus-circle text-green-600 mr-2"></i>
+                            Yeni Proje Yöneticisi Ata
+                        </h2>
+                        <form id="assignProjectForm" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Kullanıcı</label>
+                                <select id="projectUserId" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" required>
+                                    <option value="">Kullanıcı seçin...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Proje</label>
+                                <select id="projectId" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" required>
+                                    <option value="">Proje seçin...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Rol</label>
+                                <select id="projectRole" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" required>
+                                    <option value="project_manager">Proje Yöneticisi</option>
+                                    <option value="project_viewer">Proje Görüntüleyici</option>
+                                    <option value="project_team_member">Ekip Üyesi</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold">
+                                <i class="fas fa-save mr-2"></i>Ata
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Current Project Assignments -->
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4">
+                            <i class="fas fa-list text-blue-600 mr-2"></i>
+                            Mevcut Atamalar
+                        </h2>
+                        <div id="projectAssignments" class="space-y-3 max-h-96 overflow-y-auto">
+                            <p class="text-gray-500 text-center py-8">Yükleniyor...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed top-4 right-4 z-50"></div>
+
+    <script src="./js/config.js"></script>
+    <script src="./js/toast.js"></script>
+    <script>
+        // Tab switching
+        function showTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active', 'bg-purple-600', 'text-white'));
+            
+            document.getElementById(`${tab}-tab`).classList.remove('hidden');
+            event.target.classList.add('active', 'bg-purple-600', 'text-white');
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Check if user is admin
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const { data: user } = await supabase
+                .from('users')
+                .select('role')
+                .eq('id', session.user.id)
+                .single();
+
+            if (user?.role !== 'admin') {
+                showToast('Bu sayfaya sadece yöneticiler erişebilir!', 'error');
+                setTimeout(() => window.location.href = 'dashboard.html', 2000);
+                return;
+            }
+
+            await loadData();
+            setupForms();
+        });
+
+        // Load all data
+        async function loadData() {
+            await Promise.all([
+                loadUsers(),
+                loadFacilities(),
+                loadProjects(),
+                loadFacilityAssignments(),
+                loadProjectAssignments()
+            ]);
+        }
+
+        // Load users
+        async function loadUsers() {
+            const { data: users } = await supabase
+                .from('users')
+                .select('id, email, full_name, role')
+                .order('full_name');
+
+            const facilitySelect = document.getElementById('facilityUserId');
+            const projectSelect = document.getElementById('projectUserId');
+            
+            users?.forEach(user => {
+                const option = `<option value="${user.id}">${user.full_name} (${user.email}) - ${user.role}</option>`;
+                facilitySelect.innerHTML += option;
+                projectSelect.innerHTML += option;
+            });
+        }
+
+        // Load facilities
+        async function loadFacilities() {
+            const { data: facilities } = await supabase
+                .from('facilities')
+                .select('id, name, city')
+                .order('name');
+
+            const select = document.getElementById('facilityId');
+            facilities?.forEach(facility => {
+                select.innerHTML += `<option value="${facility.id}">${facility.name} (${facility.city})</option>`;
+            });
+        }
+
+        // Load projects
+        async function loadProjects() {
+            const { data: projects } = await supabase
+                .from('projects')
+                .select('id, name, status')
+                .order('name');
+
+            const select = document.getElementById('projectId');
+            projects?.forEach(project => {
+                select.innerHTML += `<option value="${project.id}">${project.name} - ${project.status}</option>`;
+            });
+        }
+
+        // Load facility assignments
+        async function loadFacilityAssignments() {
+            const { data: assignments } = await supabase
+                .from('user_facility_roles')
+                .select(`
+                    id,
+                    role,
+                    assigned_at,
+                    users!user_facility_roles_user_id_fkey(full_name, email),
+                    facilities(name, city)
+                `)
+                .order('assigned_at', { ascending: false });
+
+            const container = document.getElementById('facilityAssignments');
+            if (!assignments || assignments.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-8">Henüz atama yok</p>';
+                return;
+            }
+
+            container.innerHTML = assignments.map(a => `
+                <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                    <div class="flex-1">
+                        <p class="font-semibold text-gray-800">${a.users?.full_name}</p>
+                        <p class="text-sm text-gray-600">${a.facilities?.name} - ${a.facilities?.city}</p>
+                        <p class="text-xs text-gray-500 mt-1">
+                            ${a.role === 'facility_manager' ? 'Yönetici' : 'Görüntüleyici'} • ${new Date(a.assigned_at).toLocaleDateString('tr-TR')}
+                        </p>
+                    </div>
+                    <button onclick="removeFacilityAssignment('${a.id}')" class="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // Load project assignments
+        async function loadProjectAssignments() {
+            const { data: assignments } = await supabase
+                .from('user_project_roles')
+                .select(`
+                    id,
+                    role,
+                    assigned_at,
+                    users!user_project_roles_user_id_fkey(full_name, email),
+                    projects(name, status)
+                `)
+                .order('assigned_at', { ascending: false });
+
+            const container = document.getElementById('projectAssignments');
+            if (!assignments || assignments.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-8">Henüz atama yok</p>';
+                return;
+            }
+
+            container.innerHTML = assignments.map(a => {
+                const roleText = a.role === 'project_manager' ? 'Yönetici' : 
+                                 a.role === 'project_viewer' ? 'Görüntüleyici' : 'Ekip Üyesi';
+                return `
+                    <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                        <div class="flex-1">
+                            <p class="font-semibold text-gray-800">${a.users?.full_name}</p>
+                            <p class="text-sm text-gray-600">${a.projects?.name}</p>
+                            <p class="text-xs text-gray-500 mt-1">
+                                ${roleText} • ${new Date(a.assigned_at).toLocaleDateString('tr-TR')}
+                            </p>
+                        </div>
+                        <button onclick="removeProjectAssignment('${a.id}')" class="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Setup form handlers
+        function setupForms() {
+            document.getElementById('assignFacilityForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const userId = document.getElementById('facilityUserId').value;
+                const facilityId = document.getElementById('facilityId').value;
+                const role = document.getElementById('facilityRole').value;
+
+                const { error } = await supabase
+                    .from('user_facility_roles')
+                    .insert([{ user_id: userId, facility_id: facilityId, role }]);
+
+                if (error) {
+                    showToast('Atama yapılamadı: ' + error.message, 'error');
+                } else {
+                    showToast('Tesis yöneticisi başarıyla atandı!', 'success');
+                    e.target.reset();
+                    await loadFacilityAssignments();
+                }
+            });
+
+            document.getElementById('assignProjectForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const userId = document.getElementById('projectUserId').value;
+                const projectId = document.getElementById('projectId').value;
+                const role = document.getElementById('projectRole').value;
+
+                const { error } = await supabase
+                    .from('user_project_roles')
+                    .insert([{ user_id: userId, project_id: projectId, role }]);
+
+                if (error) {
+                    showToast('Atama yapılamadı: ' + error.message, 'error');
+                } else {
+                    showToast('Proje yöneticisi başarıyla atandı!', 'success');
+                    e.target.reset();
+                    await loadProjectAssignments();
+                }
+            });
+        }
+
+        // Remove facility assignment
+        async function removeFacilityAssignment(id) {
+            if (!confirm('Bu atamayı kaldırmak istediğinizden emin misiniz?')) return;
+
+            const { error } = await supabase
+                .from('user_facility_roles')
+                .delete()
+                .eq('id', id);
+
+            if (error) {
+                showToast('Atama kaldırılamadı: ' + error.message, 'error');
+            } else {
+                showToast('Atama başarıyla kaldırıldı!', 'success');
+                await loadFacilityAssignments();
+            }
+        }
+
+        // Remove project assignment
+        async function removeProjectAssignment(id) {
+            if (!confirm('Bu atamayı kaldırmak istediğinizden emin misiniz?')) return;
+
+            const { error } = await supabase
+                .from('user_project_roles')
+                .delete()
+                .eq('id', id);
+
+            if (error) {
+                showToast('Atama kaldırılamadı: ' + error.message, 'error');
+            } else {
+                showToast('Atama başarıyla kaldırıldı!', 'success');
+                await loadProjectAssignments();
+            }
+        }
+    </script>
+</body>
+</html>

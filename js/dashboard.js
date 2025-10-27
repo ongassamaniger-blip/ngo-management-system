@@ -74,6 +74,12 @@ async function loadUserInfo(user) {
             'user': 'Kullanıcı'
         };
         document.getElementById('userRole').textContent = roleNames[userData.role] || 'Kullanıcı';
+        
+        // Show admin assignments link only for admins
+        if (userData.role === 'admin') {
+            const adminLink = document.getElementById('adminAssignmentsLink');
+            if (adminLink) adminLink.style.display = 'flex';
+        }
     }
 }
 
