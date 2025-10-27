@@ -6,6 +6,27 @@
 const APIModule = (function() {
     'use strict';
 
+    // ==================== HELPER FUNCTIONS ====================
+    
+    /**
+     * Supabase client'ı al ve başlatılmış olduğundan emin ol
+     * @returns {Object|null} Supabase client
+     */
+    function getSupabase() {
+        // Global getSupabaseClient fonksiyonunu kullan (config.js'den)
+        if (typeof getSupabaseClient === 'function') {
+            return getSupabaseClient();
+        }
+        
+        // Geriye dönük uyumluluk - direkt supabase nesnesini kontrol et
+        if (typeof supabase !== 'undefined' && supabase !== null) {
+            return supabase;
+        }
+        
+        console.error('❌ Supabase client kullanılamıyor');
+        return null;
+    }
+
     // ==================== GENERIC CRUD OPERATIONS ====================
 
     /**
@@ -17,7 +38,12 @@ const APIModule = (function() {
      */
     async function get(table, filters = {}, select = '*') {
         try {
-            let query = supabase.from(table).select(select);
+            const client = getSupabase();
+            if (!client) {
+                throw new Error('Veritabanı bağlantısı mevcut değil');
+            }
+            
+            let query = client.from(table).select(select);
 
             // Apply filters
             Object.entries(filters).forEach(([key, value]) => {
@@ -47,7 +73,12 @@ const APIModule = (function() {
      */
     async function insert(table, data) {
         try {
-            const { data: result, error } = await supabase
+            const client = getSupabase();
+            if (!client) {
+                throw new Error('Veritabanı bağlantısı mevcut değil');
+            }
+            
+            const { data: result, error } = await client
                 .from(table)
                 .insert(Array.isArray(data) ? data : [data])
                 .select();
@@ -73,7 +104,12 @@ const APIModule = (function() {
      */
     async function update(table, id, data) {
         try {
-            const { data: result, error } = await supabase
+            const client = getSupabase();
+            if (!client) {
+                throw new Error('Veritabanı bağlantısı mevcut değil');
+            }
+            
+            const { data: result, error } = await client
                 .from(table)
                 .update(data)
                 .eq('id', id)
@@ -99,7 +135,12 @@ const APIModule = (function() {
      */
     async function remove(table, id) {
         try {
-            const { error } = await supabase
+            const client = getSupabase();
+            if (!client) {
+                throw new Error('Veritabanı bağlantısı mevcut değil');
+            }
+            
+            const { error } = await client
                 .from(table)
                 .delete()
                 .eq('id', id);
@@ -129,7 +170,12 @@ const APIModule = (function() {
                 throw new Error('Invalid ID format');
             }
 
-            const { data, error } = await supabase
+            const client = getSupabase();
+            if (!client) {
+                throw new Error('Veritabanı bağlantısı mevcut değil');
+            }
+
+            const { data, error } = await client
                 .from(table)
                 .select(select)
                 .eq('id', id)
@@ -154,7 +200,12 @@ const APIModule = (function() {
      */
     async function count(table, filters = {}) {
         try {
-            let query = supabase
+            const client = getSupabase();
+            if (!client) {
+                throw new Error('Veritabanı bağlantısı mevcut değil');
+            }
+            
+            let query = client
                 .from(table)
                 .select('*', { count: 'exact', head: true });
 
