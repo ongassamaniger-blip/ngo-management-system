@@ -53,7 +53,7 @@
 **Changes:**
 - Removed immediate initialization attempt
 - Added `initializeSupabase()` function with proper null checks
-- Implemented retry logic (5 attempts with 500ms intervals)
+- Implemented retry logic (1 initial + 5 retries, 500ms intervals)
 - Added `getSupabaseClient()` helper function
 - Automatic initialization on page load with delay
 
@@ -82,7 +82,7 @@ function initializeSupabase() {
 
 **Features:**
 - ✅ Null safety checks
-- ✅ Retry mechanism (up to 6 attempts)
+- ✅ Retry mechanism (1 initial + 5 retries = 6 total attempts)
 - ✅ User-friendly error messages
 - ✅ Graceful degradation
 - ✅ Console logging for debugging
@@ -214,7 +214,7 @@ TypeError: Cannot read properties of null (reading 'auth')
 - ✅ Safe helper functions
 - ✅ Delayed initialization with retries
 - ✅ User-friendly error messages
-- ✅ Retry logic (5 attempts)
+- ✅ Retry logic (6 total attempts: 1 initial + 5 retries)
 - ✅ Graceful degradation
 
 ## Files Modified
