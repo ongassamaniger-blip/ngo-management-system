@@ -192,6 +192,15 @@ async function loadFacilities() {
         facilities = window.RBACModule.filterByAccess(facilities, 'facility');
     }
     
+    // Filter out facilities with invalid IDs
+    facilities = facilities.filter(f => {
+        if (!f || !f.id || f.id === 'null' || f.id === 'undefined') {
+            console.warn('Found facility with invalid ID:', f);
+            return false;
+        }
+        return true;
+    });
+    
     if (!facilities || facilities.length === 0) {
         container.innerHTML = '<p class="text-gray-500 col-span-3 text-center py-8">Henüz tesis yok</p>';
         return;
@@ -627,10 +636,21 @@ function getRoleTextForTable(role) {
 
 // Tesis detayını göster
 window.viewFacilityDetail = function(facilityId) {
-    if (!facilityId) {
-        showToast('Tesis ID bulunamadı!', 'error');
+    // Validate facility ID
+    if (!facilityId || facilityId === 'null' || facilityId === 'undefined' || String(facilityId).trim() === '') {
+        showToast('Geçersiz tesis ID! Lütfen tekrar deneyin.', 'error');
+        console.error('Invalid facility ID:', facilityId);
         return;
     }
+    
+    // Validate UUID format (basic check)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(facilityId)) {
+        showToast('Geçersiz tesis ID formatı!', 'error');
+        console.error('Invalid UUID format for facility ID:', facilityId);
+        return;
+    }
+    
     window.location.href = `facility-detail.html?id=${facilityId}`;
 };
 
