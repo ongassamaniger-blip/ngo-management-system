@@ -1209,3 +1209,9 @@ async function deleteUserAction(userId) {
         showToast('Kullanıcı silinemedi!', 'error');
     }
 }
+
+// Yeni Tesis Modal'ını Aç
+window.openNewFacilityModal = function() {
+    showToast('Yeni tesis ekleme formu açılacak', 'info');
+    // Modal kodunu buraya ekleyebilirsin
+};
