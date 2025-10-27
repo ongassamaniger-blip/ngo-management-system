@@ -24,7 +24,7 @@ async function initializePage() {
 
         if (!facilityId) {
             ToastManager.error('Tesis ID bulunamadı!');
-            setTimeout(() => window.location.href = 'dashboard.html', 2000);
+            
             return;
         }
 
@@ -121,7 +121,7 @@ async function loadFacilityDetail(facilityId) {
     } catch (error) {
         console.error('Facility detail loading error:', error);
         loadingToast.update('Yükleme başarısız: ' + error.message, 'error');
-        setTimeout(() => window.location.href = 'dashboard.html', 3000);
+        
     }
 }
 
