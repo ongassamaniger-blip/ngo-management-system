@@ -98,7 +98,7 @@ const errors = window.ErrorHandler.getErrors();
 console.log('Errors:', errors);
 ```
 
-Detaylı dokümantasyon için: [SYSTEM_CHECK_DOCUMENTATION.md](SYSTEM_CHECK_DOCUMENTATION.md)
+For detailed documentation: [System Check Documentation](SYSTEM_CHECK_DOCUMENTATION.md)
 
 ---
 
