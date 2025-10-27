@@ -3,7 +3,7 @@
 ## Date: 2025-10-27
 
 ## Issue Summary (Turkish)
-"tamam hangi toast daha gelişmiş ise onu kullanalım. tesisler sayfasındaki ve tesis detaylarındaki bütün yapıyı kontrol edelim ve gelişmiş bir versiyonunu kulllanalım. ypıyı tekrardan kontrol et ve genel stk yönetimi ve alt yönetimler olarak tesis bazlı ve proje bazlı yönetimler olacak şekilde olduğunu da kontrol et"
+"tamam hangi toast daha gelişmiş ise onu kullanalım. tesisler sayfasındaki ve tesis detaylarındaki bütün yapıyı kontrol edelim ve gelişmiş bir versiyonunu kullanalım. yapıyı tekrardan kontrol et ve genel stk yönetimi ve alt yönetimler olarak tesis bazlı ve proje bazlı yönetimler olacak şekilde olduğunu da kontrol et"
 
 ### Translation
 "Okay, let's use whichever toast is more advanced. Let's check the entire structure on the facilities page and facility details and use a more advanced version. Check the structure again and confirm there is general NGO management and sub-management structure organized as facility-based and project-based managements."
