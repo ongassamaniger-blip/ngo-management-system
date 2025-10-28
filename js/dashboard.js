@@ -1,5 +1,17 @@
 // ==================== DASHBOARD TAM VERSİYON ====================
 
+// Supabase client'ı güvenli şekilde al
+function getSafeSupabaseClient() {
+    if (typeof getSupabaseClient === 'function') {
+        return getSupabaseClient();
+    }
+    if (typeof supabase !== 'undefined' && supabase !== null) {
+        return supabase;
+    }
+    console.error('❌ Supabase client kullanılamıyor');
+    return null;
+}
+
 // Sayfa yüklendiğinde
 document.addEventListener('DOMContentLoaded', async () => {
     await initDashboard();
@@ -11,8 +23,15 @@ async function initDashboard() {
     if (loading) loading.classList.remove('hidden');
 
     try {
+        // Supabase client kontrolü
+        const client = getSafeSupabaseClient();
+        if (!client) {
+            ToastManager.error('Veritabanı bağlantısı kurulamadı. Lütfen sayfayı yenileyin.');
+            return;
+        }
+        
         // Auth kontrolü
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await client.auth.getSession();
         
         if (!session) {
             window.location.href = 'login.html';
@@ -354,7 +373,10 @@ function setupEventListeners() {
 
     // Çıkış butonu
     document.getElementById('logoutBtn').addEventListener('click', async () => {
-        await supabase.auth.signOut();
+        const client = getSafeSupabaseClient();
+        if (client) {
+            await client.auth.signOut();
+        }
         window.location.href = 'login.html';
     });
 
@@ -819,7 +841,10 @@ let notificationsOpen = false;
 
 // Bildirimleri yükle
 async function loadNotifications() {
-    const { data: session } = await supabase.auth.getSession();
+    const client = getSafeSupabaseClient();
+    if (!client) return;
+    
+    const { data: session } = await client.auth.getSession();
     if (!session?.session?.user) return;
 
     const { data: user } = await supabase
@@ -917,7 +942,10 @@ window.markAsRead = async function(notificationId) {
 
 // Tümünü okundu işaretle
 window.markAllAsRead = async function() {
-    const { data: session } = await supabase.auth.getSession();
+    const client = getSafeSupabaseClient();
+    if (!client) return;
+    
+    const { data: session } = await client.auth.getSession();
     if (!session?.session?.user) return;
 
     const { data: user } = await supabase
@@ -1131,10 +1159,13 @@ function setupAyarlarHandlers() {
 
 // Ayarlar verilerini yükle
 async function loadAyarlarData() {
-    const { data: { session } } = await supabase.auth.getSession();
+    const client = getSafeSupabaseClient();
+    if (!client) return;
+    
+    const { data: { session } } = await client.auth.getSession();
     if (!session) return;
 
-    const { data: userData } = await supabase
+    const { data: userData } = await client
         .from('users')
         .select('*')
         .eq('email', session.user.email)

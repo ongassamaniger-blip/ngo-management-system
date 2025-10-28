@@ -7,12 +7,32 @@ const AuthModule = (function() {
     'use strict';
 
     /**
+     * Supabase client'ı al
+     * @returns {Object|null} Supabase client
+     */
+    function getSupabase() {
+        if (typeof getSupabaseClient === 'function') {
+            return getSupabaseClient();
+        }
+        if (typeof supabase !== 'undefined' && supabase !== null) {
+            return supabase;
+        }
+        console.error('❌ Supabase client kullanılamıyor');
+        return null;
+    }
+
+    /**
      * Check if user is authenticated
      * @returns {Promise<Object|null>} - User object or null
      */
     async function getCurrentUser() {
         try {
-            const { data: { user }, error } = await supabase.auth.getUser();
+            const client = getSupabase();
+            if (!client) {
+                throw new Error('Veritabanı bağlantısı mevcut değil');
+            }
+            
+            const { data: { user }, error } = await client.auth.getUser();
             
             if (error) throw error;
             
@@ -48,7 +68,12 @@ const AuthModule = (function() {
      */
     async function login(email, password) {
         try {
-            const { data, error } = await supabase.auth.signInWithPassword({
+            const client = getSupabase();
+            if (!client) {
+                throw new Error('Veritabanı bağlantısı mevcut değil');
+            }
+            
+            const { data, error } = await client.auth.signInWithPassword({
                 email,
                 password
             });
@@ -71,7 +96,12 @@ const AuthModule = (function() {
      */
     async function logout() {
         try {
-            const { error } = await supabase.auth.signOut();
+            const client = getSupabase();
+            if (!client) {
+                throw new Error('Veritabanı bağlantısı mevcut değil');
+            }
+            
+            const { error } = await client.auth.signOut();
 
             if (error) throw error;
 
@@ -95,8 +125,13 @@ const AuthModule = (function() {
             const user = await getCurrentUser();
             if (!user) return null;
 
+            const client = getSupabase();
+            if (!client) {
+                throw new Error('Veritabanı bağlantısı mevcut değil');
+            }
+
             // Get user details from users table
-            const { data, error } = await supabase
+            const { data, error } = await client
                 .from('users')
                 .select('*')
                 .eq('id', user.id)
@@ -153,9 +188,14 @@ const AuthModule = (function() {
      * @param {Function} callback - Callback function for auth state changes
      */
     function onAuthStateChange(callback) {
-        supabase.auth.onAuthStateChange((event, session) => {
-            callback(event, session);
-        });
+        const client = getSupabase();
+        if (client && client.auth) {
+            client.auth.onAuthStateChange((event, session) => {
+                callback(event, session);
+            });
+        } else {
+            console.warn('⚠️ Auth state listener başlatılamadı - Supabase client mevcut değil');
+        }
     }
 
     // ==================== PUBLIC API ====================
